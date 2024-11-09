@@ -1,0 +1,14 @@
+{
+    "meta": {
+      "title": "$t(common:appName): {{gameTitle}}",
+      "description": "Результаты прошедшей игры {{gameTitle}}"
+    },
+    "title": "Игра: {{gameTitle}}",
+    "table": {
+      "gameId": "ID",
+      "series": "Серия",
+      "gameNumber": "Пакет",
+      "date": "Дата",
+      "location": "Место"
+    }
+}

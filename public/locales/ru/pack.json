@@ -1,0 +1,7 @@
+{
+  "meta": {
+    "title": "Пакет: {{packTitle}}",
+    "description": "Результаты прошедших игр пакета {{packTitle}}"
+  },
+  "title": "Пакет: {{packTitle}}"
+}

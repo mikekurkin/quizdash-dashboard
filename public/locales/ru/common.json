@@ -1,0 +1,14 @@
+{
+  "appName": "QuizDash",
+  "header": {
+    "home": "Главная",
+    "about": "О нас"
+  },
+  "search": {
+    "placeholder": "Поиск",
+    "label": "Поиск"
+  },
+  "datePicker": {
+    "placeholder": "Выберите дату"
+  }
+}
