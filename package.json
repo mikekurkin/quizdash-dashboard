@@ -73,6 +73,19 @@
   "engines": {
     "node": ">=20.0.0"
   },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/mikekurkin/quizdash-dashboard.git"
+  },
+  "keywords": [
+    "quiz",
+    "dashboard",
+    "remix",
+    "react",
+    "shadcn",
+    "typescript",
+    "quizplease"
+  ],
   "lint-staged": {
     "*.{js,jsx,ts,tsx,json,css,md}": [
       "prettier --write"
