@@ -4,11 +4,11 @@
  * For more information, see https://remix.run/file-conventions/entry.client
  */
 
-import { RemixBrowser } from "@remix-run/react";
-import { startTransition, StrictMode } from "react";
-import { hydrateRoot } from "react-dom/client";
-import { I18nextProvider } from "react-i18next";
-import i18next from "~/i18n/i18next.client";
+import { RemixBrowser } from '@remix-run/react'
+import { startTransition, StrictMode } from 'react'
+import { hydrateRoot } from 'react-dom/client'
+import { I18nextProvider } from 'react-i18next'
+import i18next from '~/i18n/i18next.client'
 
 startTransition(() => {
   hydrateRoot(
@@ -18,5 +18,5 @@ startTransition(() => {
         <RemixBrowser />
       </I18nextProvider>
     </StrictMode>
-  );
-});
+  )
+})

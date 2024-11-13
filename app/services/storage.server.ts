@@ -1,3 +1,3 @@
-import { CsvStorage } from '~/storage/csv.server';
+import { CsvStorage } from '~/storage/csv.server'
 
-export const storage = new CsvStorage();
+export const storage = new CsvStorage()

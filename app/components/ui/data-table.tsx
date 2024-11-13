@@ -3,7 +3,7 @@ import {
   flexRender,
   getCoreRowModel,
   useReactTable,
-} from '@tanstack/react-table'
+} from "@tanstack/react-table";
 
 import {
   Table,
@@ -12,22 +12,22 @@ import {
   TableHead,
   TableHeader,
   TableRow,
-} from '~/components/ui/table'
-import { cn } from '~/lib/utils'
+} from "~/components/ui/table";
+import { cn } from "~/lib/utils";
 
 interface DataTableProps<TData, TValue> {
-  columns: ColumnDef<TData, TValue>[]
-  data: TData[]
-  className?: string
+  columns: ColumnDef<TData, TValue>[];
+  data: TData[];
+  className?: string;
   extraClassNames?: {
-    table?: string
-    header?: string
-    body?: string
-    row?: string
-    head?: string
-    cell?: string
-  }
-  noResults?: React.ReactNode
+    table?: string;
+    header?: string;
+    body?: string;
+    row?: string;
+    head?: string;
+    cell?: string;
+  };
+  noResults?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
@@ -35,13 +35,13 @@ export function DataTable<TData, TValue>({
   data,
   className,
   extraClassNames,
-  noResults = 'No results',
+  noResults = "No results",
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
     columns,
     getCoreRowModel: getCoreRowModel(),
-  })
+  });
 
   return (
     <div className="rounded-md border">
@@ -49,25 +49,25 @@ export function DataTable<TData, TValue>({
         <Table className={extraClassNames?.table}>
           <TableHeader
             className={cn(
-              'sticky top-0 bg-background z-10',
-              extraClassNames?.header,
+              "sticky top-0 bg-background z-10",
+              extraClassNames?.header
             )}
           >
             {table.getHeaderGroups().map((headerGroup) => (
               <TableRow
                 key={headerGroup.id}
-                className={cn('border-b', extraClassNames?.row)}
+                className={cn("border-b", extraClassNames?.row)}
               >
                 {headerGroup.headers.map((header) => (
                   <TableHead
                     key={header.id}
-                    className={cn('bg-background', extraClassNames?.head)}
+                    className={cn("bg-background", extraClassNames?.head)}
                   >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
                           header.column.columnDef.header,
-                          header.getContext(),
+                          header.getContext()
                         )}
                   </TableHead>
                 ))}
@@ -79,14 +79,14 @@ export function DataTable<TData, TValue>({
               table.getRowModel().rows.map((row) => (
                 <TableRow
                   key={row.id}
-                  data-state={row.getIsSelected() && 'selected'}
+                  data-state={row.getIsSelected() && "selected"}
                   className={extraClassNames?.row}
                 >
                   {row.getVisibleCells().map((cell) => (
                     <TableCell key={cell.id} className={extraClassNames?.cell}>
                       {flexRender(
                         cell.column.columnDef.cell,
-                        cell.getContext(),
+                        cell.getContext()
                       )}
                     </TableCell>
                   ))}
@@ -97,8 +97,8 @@ export function DataTable<TData, TValue>({
                 <TableCell
                   colSpan={columns.length}
                   className={cn(
-                    'h-24 text-center text-sm text-muted-foreground',
-                    extraClassNames?.cell,
+                    "h-24 text-center text-sm text-muted-foreground",
+                    extraClassNames?.cell
                   )}
                 >
                   {noResults}
@@ -109,5 +109,5 @@ export function DataTable<TData, TValue>({
         </Table>
       </div>
     </div>
-  )
+  );
 }

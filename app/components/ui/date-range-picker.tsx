@@ -1,24 +1,20 @@
-import { CalendarSearch, X } from "lucide-react"
-import * as React from "react"
-import { DateRange } from "react-day-picker"
+import { CalendarSearch, X } from 'lucide-react'
+import * as React from 'react'
+import { DateRange } from 'react-day-picker'
 
-import { cn } from "~/lib/utils"
-import { Button } from "./button"
-import { Calendar } from "./calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "./popover"
+import { cn } from '~/lib/utils'
+import { Button } from './button'
+import { Calendar } from './calendar'
+import { Popover, PopoverContent, PopoverTrigger } from './popover'
 
 export function DateRangePicker({
   className,
-  align = "center",
-  selectDatePlaceholder = "Select a date",
+  align = 'center',
+  selectDatePlaceholder = 'Select a date',
   initialDate = undefined,
   onDateChange = undefined,
 }: React.HTMLAttributes<HTMLDivElement> & {
-  align?: "start" | "center" | "end"
+  align?: 'start' | 'center' | 'end'
   selectDatePlaceholder?: string
   initialDate?: DateRange
   onDateChange?: (date: DateRange | undefined) => void
@@ -60,16 +56,13 @@ export function DateRangePicker({
   }, [])
 
   return (
-    <div className={cn("grid gap-2", className)}>
+    <div className={cn('grid gap-2', className)}>
       <Popover open={open} onOpenChange={setOpen}>
         <PopoverTrigger asChild>
           <Button
             id="date"
-            variant={"ghost"}
-            className={cn(
-              "w-10 p-0",
-              date ? "bg-primary text-primary-foreground" : "text-muted-foreground"
-            )}
+            variant={'ghost'}
+            className={cn('w-10 p-0', date ? 'bg-primary text-primary-foreground' : 'text-muted-foreground')}
             onMouseEnter={handleMouseEnter}
             onMouseLeave={handleMouseLeave}
           >
@@ -86,19 +79,15 @@ export function DateRangePicker({
             <div className="text-sm h-6 mx-2">
               {date?.from ? (
                 <span>
-                  {date.from.toLocaleDateString()}&nbsp;&ndash;&nbsp;{date.to?.toLocaleDateString()}
+                  {date.from.toLocaleDateString()}&nbsp;&ndash;&nbsp;
+                  {date.to?.toLocaleDateString()}
                 </span>
               ) : (
                 <span>{selectDatePlaceholder}</span>
               )}
             </div>
             {date && (
-              <Button
-                variant="ghost"
-                size="sm"
-                className="h-6 w-6 p-0"
-                onClick={handleClear}
-              >
+              <Button variant="ghost" size="sm" className="h-6 w-6 p-0" onClick={handleClear}>
                 <X className="h-4 w-4" />
               </Button>
             )}

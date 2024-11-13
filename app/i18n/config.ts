@@ -3,4 +3,4 @@ export const i18nConfig = {
   fallbackLng: 'ru',
   defaultNS: 'common',
   react: { useSuspense: false },
-};
+}

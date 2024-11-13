@@ -71,7 +71,7 @@ export interface QueryParams {
   cursor?: number;
   limit?: number;
   sort?: string;
-  order?: 'asc' | 'desc';
+  order?: "asc" | "desc";
   search?: string;
   series?: string;
   team?: string;

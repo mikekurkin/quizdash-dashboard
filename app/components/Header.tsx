@@ -1,7 +1,7 @@
-import { Link } from "@remix-run/react";
-import { LayoutDashboard } from "lucide-react";
-import { CitySelect } from "./CitySelect";
-import { ModeToggle } from "./ModeToggle";
+import { Link } from '@remix-run/react'
+import { LayoutDashboard } from 'lucide-react'
+import { CitySelect } from './CitySelect'
+import { ModeToggle } from './ModeToggle'
 
 export function Header({ title }: { title: string }) {
   return (
@@ -23,6 +23,6 @@ export function Header({ title }: { title: string }) {
           </nav>
         </div>
       </div>
-</header>
-  );
+    </header>
+  )
 }

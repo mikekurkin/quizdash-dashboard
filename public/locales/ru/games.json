@@ -1,23 +1,23 @@
 {
-    "meta": {
-      "title": "$t(common:appName): Прошедшие игры",
-      "description": "Прошедшие игры в городе"
-    },
-    "title": "Прошедшие игры",
-    "table": {
-      "gameId": "ID",
-      "series": "Серия",
-      "gameNumber": "Пакет",
-      "date": "Дата",
-      "location": "Место"
-    },
-    "endOfResults": "Иии... Это всё",
-    "noResults": "Игры не найдены",
-    "search": {
-      "label": "Поиск",
-      "placeholder": "Поиск по играм"
-    },
-    "datePicker": {
-      "placeholder": "Выберите дату"
-    }
+  "meta": {
+    "title": "$t(common:appName): Прошедшие игры",
+    "description": "Прошедшие игры в городе"
+  },
+  "title": "Прошедшие игры",
+  "table": {
+    "gameId": "ID",
+    "series": "Серия",
+    "gameNumber": "Пакет",
+    "date": "Дата",
+    "location": "Место"
+  },
+  "endOfResults": "Иии... Это всё",
+  "noResults": "Игры не найдены",
+  "search": {
+    "label": "Поиск",
+    "placeholder": "Поиск по играм"
+  },
+  "datePicker": {
+    "placeholder": "Выберите дату"
+  }
 }

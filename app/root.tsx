@@ -1,46 +1,39 @@
-import type { LinksFunction, LoaderFunctionArgs } from "@remix-run/node";
-import {
-  Links,
-  Meta,
-  Outlet,
-  Scripts,
-  ScrollRestoration,
-  useLoaderData,
-} from "@remix-run/react";
-import { useTranslation } from "react-i18next";
-import { useChangeLanguage } from "remix-i18next/react";
-import i18next from "~/i18n/i18next.server";
+import type { LinksFunction, LoaderFunctionArgs } from '@remix-run/node'
+import { Links, Meta, Outlet, Scripts, ScrollRestoration, useLoaderData } from '@remix-run/react'
+import { useTranslation } from 'react-i18next'
+import { useChangeLanguage } from 'remix-i18next/react'
+import i18next from '~/i18n/i18next.server'
 
-import clsx from "clsx";
-import { PreventFlashOnWrongTheme, ThemeProvider, useTheme } from "remix-themes";
-import { themeSessionResolver } from "~/sessions.server";
+import clsx from 'clsx'
+import { PreventFlashOnWrongTheme, ThemeProvider, useTheme } from 'remix-themes'
+import { themeSessionResolver } from '~/sessions.server'
 
-import styles from "~/tailwind.css?url";
-import { QueryProvider } from "./context/QueryProvider";
+import styles from '~/tailwind.css?url'
+import { QueryProvider } from './context/QueryProvider'
 
 export const links: LinksFunction = () => [
-  { rel: "stylesheet", href: styles },
-  { rel: "preconnect", href: "https://fonts.googleapis.com" },
+  { rel: 'stylesheet', href: styles },
+  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
   {
-    rel: "preconnect",
-    href: "https://fonts.gstatic.com",
-    crossOrigin: "anonymous",
+    rel: 'preconnect',
+    href: 'https://fonts.gstatic.com',
+    crossOrigin: 'anonymous',
   },
   {
-    rel: "stylesheet",
-    href: "https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap",
+    rel: 'stylesheet',
+    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
   },
-];
+]
 
 // Return the theme from the session storage using the loader
 export async function loader({ request }: LoaderFunctionArgs) {
   const { getTheme } = await themeSessionResolver(request)
-  const locale = await i18next.getLocale(request);
-  return { locale, theme: getTheme() };
+  const locale = await i18next.getLocale(request)
+  return { locale, theme: getTheme() }
 }
 
 export default function AppWithProviders() {
-  const { theme } = useLoaderData<typeof loader>();
+  const { theme } = useLoaderData<typeof loader>()
 
   return (
     <QueryProvider>
@@ -48,14 +41,14 @@ export default function AppWithProviders() {
         <App />
       </ThemeProvider>
     </QueryProvider>
-  );
+  )
 }
 
 function App() {
-  const { i18n } = useTranslation();
-  const { locale } = useLoaderData<typeof loader>();
+  const { i18n } = useTranslation()
+  const { locale } = useLoaderData<typeof loader>()
 
-  useChangeLanguage(locale);
+  useChangeLanguage(locale)
 
   const data = useLoaderData<typeof loader>()
   const [theme] = useTheme()
@@ -69,7 +62,6 @@ function App() {
         <Links />
       </head>
       <body>
-
         <Outlet />
         <ScrollRestoration />
         <Scripts />

@@ -1,8 +1,8 @@
-import { z } from 'zod';
+import { z } from 'zod'
 
 export const RankSchema = z.object({
   _id: z.string(),
   name: z.string(),
-});
+})
 
-export type Rank = z.infer<typeof RankSchema>;
+export type Rank = z.infer<typeof RankSchema>

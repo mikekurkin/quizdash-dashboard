@@ -1,8 +1,8 @@
-import { createCookie } from '@remix-run/node';
-import Backend from 'i18next-fs-backend';
-import { resolve } from 'node:path';
-import { RemixI18Next } from 'remix-i18next/server';
-import { i18nConfig } from './config';
+import { createCookie } from '@remix-run/node'
+import Backend from 'i18next-fs-backend'
+import { resolve } from 'node:path'
+import { RemixI18Next } from 'remix-i18next/server'
+import { i18nConfig } from './config'
 
 const i18next = new RemixI18Next({
   detection: {
@@ -23,6 +23,6 @@ const i18next = new RemixI18Next({
     },
   },
   backend: Backend,
-});
+})
 
-export default i18next;
+export default i18next

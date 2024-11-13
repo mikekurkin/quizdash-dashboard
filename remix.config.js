@@ -2,5 +2,5 @@
 export default {
   tailwind: true,
   postcss: true,
-  serverModuleFormat: "esm"
-};
+  serverModuleFormat: 'esm',
+}

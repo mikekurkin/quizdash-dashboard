@@ -16,23 +16,17 @@ const LinkCell = ({
 }: {
   children: React.ReactNode
   className?: string
-} & ({ row: Row<Game>; linkTo?: never } | { row?: never; linkTo: string }) & Partial<RemixLinkProps>) => {
+} & ({ row: Row<Game>; linkTo?: never } | { row?: never; linkTo: string }) &
+  Partial<RemixLinkProps>) => {
   const to = linkTo ?? `/${row.original.city.slug}/game/${row.original._id}`
   return (
-    <Link
-      className={cn('flex items-center p-2', className)}
-      prefetch="intent"
-      to={to}
-      {...props}
-    >
+    <Link className={cn('flex items-center p-2', className)} prefetch="intent" to={to} {...props}>
       {children}
     </Link>
   )
 }
 
-const createColumns = (
-  columnHeaders: Record<string, string>,
-): ColumnDef<Game>[] => [
+const createColumns = (columnHeaders: Record<string, string>): ColumnDef<Game>[] => [
   {
     accessorKey: '_id',
     header: columnHeaders['_id'],
@@ -48,7 +42,12 @@ const createColumns = (
     cell: ({ row }) => {
       return (
         <LinkCell row={row} tabIndex={-1}>
-          <Link className="hover:text-muted-foreground hover:underline decoration-dotted" to={`/${row.original.city.slug}/games?q=${row.original.series.name}`}>{row.original.series.name}</Link>
+          <Link
+            className="hover:text-muted-foreground hover:underline decoration-dotted"
+            to={`/${row.original.city.slug}/games?q=${row.original.series.name}`}
+          >
+            {row.original.series.name}
+          </Link>
         </LinkCell>
       )
     },
@@ -61,7 +60,12 @@ const createColumns = (
       const { city, series, pack } = row.original
       return (
         <LinkCell row={row} tabIndex={-1}>
-          <Link className="hover:text-muted-foreground hover:underline decoration-dotted" to={`/${city.slug}/pack/${series.slug}/${pack.number}`}>{pack.formatted}</Link>
+          <Link
+            className="hover:text-muted-foreground hover:underline decoration-dotted"
+            to={`/${city.slug}/pack/${series.slug}/${pack.number}`}
+          >
+            {pack.formatted}
+          </Link>
         </LinkCell>
       )
     },
@@ -95,7 +99,12 @@ const createColumns = (
     cell: ({ row }) => {
       return (
         <LinkCell row={row} tabIndex={-1}>
-          <Link className="hover:text-muted-foreground hover:underline decoration-dotted" to={`/${row.original.city.slug}/games?q=${row.original.location}`}>{row.original.location}</Link>
+          <Link
+            className="hover:text-muted-foreground hover:underline decoration-dotted"
+            to={`/${row.original.city.slug}/games?q=${row.original.location}`}
+          >
+            {row.original.location}
+          </Link>
         </LinkCell>
       )
     },
@@ -111,22 +120,10 @@ export function GamesTable({
   noResults: string
   endOfResults: string
 }) {
-  const {
-    data: flatData,
-    fetchNextPage,
-    hasNextPage,
-    isFetchingNextPage,
-    isLoading,
-    isError,
-    error,
-  } = useGames()
+  const { data: flatData, fetchNextPage, hasNextPage, isFetchingNextPage, isLoading, isError, error } = useGames()
 
   if (isError) {
-    return (
-      <div className="rounded-md border p-4 text-center text-sm text-muted-foreground">
-        Error: {error.message}
-      </div>
-    )
+    return <div className="rounded-md border p-4 text-center text-sm text-muted-foreground">Error: {error.message}</div>
   }
 
   const columns = createColumns(columnHeaders)
