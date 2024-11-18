@@ -1,9 +1,8 @@
-import { useLoaderData, useNavigate } from '@remix-run/react'
+import { useNavigate } from '@remix-run/react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '~/components/ui/select'
-import { loader as cityLayoutLoader } from '~/routes/$city'
+import { City } from '~/schemas/city'
 
-export function CitySelect() {
-  const { cities, currentCity } = useLoaderData<typeof cityLayoutLoader>()
+export function CitySelect({ cities, currentCity }: { cities: City[]; currentCity: City }) {
   const navigate = useNavigate()
 
   if (!cities || !currentCity) return null

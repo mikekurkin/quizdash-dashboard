@@ -1,11 +1,12 @@
 import type { MetaFunction } from '@remix-run/node'
 import { LoaderFunctionArgs } from '@remix-run/node'
-import { useLoaderData } from '@remix-run/react'
+import { useLoaderData, useOutletContext } from '@remix-run/react'
 import { GamesTable } from '~/components/GamesTable'
 import { SearchForm } from '~/components/SearchForm'
 import { GAMES_PER_PAGE } from '~/hooks/useGames'
 import i18next from '~/i18n/i18next.server'
 import { storage } from '~/services/storage.server'
+import { CityContext } from './$city'
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [{ title: data?.meta.title }, { name: 'description', content: data?.meta.description }]
@@ -34,6 +35,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     _id: t('table.gameId'),
     'series.name': t('table.series'),
     number: t('table.gameNumber'),
+    complexity: t('table.complexity'),
     date: t('table.date'),
     location: t('table.location'),
   }
@@ -61,7 +63,8 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 }
 
 export default function GamesRoute() {
-  const { t, searchParams } = useLoaderData<typeof loader>()
+  const { t, searchParams, games } = useLoaderData<typeof loader>()
+  const { currentCity } = useOutletContext<CityContext>()
 
   return (
     <div>
@@ -77,7 +80,13 @@ export default function GamesRoute() {
           className="w-full sm:w-[300px] md:w-[400px]"
         />
       </div>
-      <GamesTable columnHeaders={t.columnHeaders} endOfResults={t.endOfResults} noResults={t.noResults} />
+      <GamesTable
+        currentCity={currentCity}
+        initialGames={games}
+        columnHeaders={t.columnHeaders}
+        endOfResults={t.endOfResults}
+        noResults={t.noResults}
+      />
     </div>
   )
 }

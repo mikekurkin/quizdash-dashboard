@@ -10,13 +10,15 @@ const Table = React.forwardRef<HTMLTableElement, React.HTMLAttributes<HTMLTableE
 Table.displayName = 'Table'
 
 const TableHeader = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
-  ({ className, ...props }, ref) => <thead ref={ref} className={cn('[&_tr]:border-b', className)} {...props} />
+  ({ className, ...props }, ref) => (
+    <thead ref={ref} className={cn('sticky top-0 z-10', '[&_tr]:border-b', className)} {...props} />
+  )
 )
 TableHeader.displayName = 'TableHeader'
 
 const TableBody = React.forwardRef<HTMLTableSectionElement, React.HTMLAttributes<HTMLTableSectionElement>>(
   ({ className, ...props }, ref) => (
-    <tbody ref={ref} className={cn('[&_tr:last-child]:border-0', className)} {...props} />
+    <tbody ref={ref} className={cn('[&_tr:last-child]:border-0 max-h-[300px]', className)} {...props} />
   )
 )
 TableBody.displayName = 'TableBody'
@@ -44,7 +46,9 @@ const TableHead = React.forwardRef<HTMLTableCellElement, React.ThHTMLAttributes<
     <th
       ref={ref}
       className={cn(
-        'h-10 px-2 text-left align-middle font-medium text-muted-foreground bg-muted backdrop-blur supports-[backdrop-filter]:bg-muted/90 mt-20 [&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
+        'h-10 px-2 text-left align-middle font-medium text-muted-foreground',
+        'bg-muted/95 backdrop-blur supports-[backdrop-filter]:bg-muted/60',
+        '[&:has([role=checkbox])]:pr-0 [&>[role=checkbox]]:translate-y-[2px]',
         className
       )}
       {...props}

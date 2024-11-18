@@ -9,7 +9,8 @@
     "series": "Серия",
     "gameNumber": "Пакет",
     "date": "Дата",
-    "location": "Место"
+    "location": "Место",
+    "complexity": "Сложность"
   },
   "endOfResults": "Иии... Это всё",
   "noResults": "Игры не найдены",

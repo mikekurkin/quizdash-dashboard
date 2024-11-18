@@ -4,11 +4,22 @@
     "description": "Результаты прошедшей игры {{gameTitle}}"
   },
   "title": "Игра: {{gameTitle}}",
-  "table": {
-    "gameId": "ID",
-    "series": "Серия",
-    "gameNumber": "Пакет",
-    "date": "Дата",
-    "location": "Место"
+  "columnHeaders": {
+    "place": "Место",
+    "team": "Команда",
+    "sum": "Сумма",
+    "efficiency": "Эффективность"
+  },
+  "complexityLabels": {
+    "sumComplexity": "Cложность пакета",
+    "roundsComplexity": "По раундам",
+    "roundComplexityTooltip": "Раунд",
+    "sumTopNAvg": "Средний балл топ-{{n}} команд",
+    "roundTopNAvg": "Средний топ-{{n}}"
+  },
+  "infoLabels": {
+    "date": "Когда",
+    "location": "Где",
+    "teams": "команд"
   }
 }

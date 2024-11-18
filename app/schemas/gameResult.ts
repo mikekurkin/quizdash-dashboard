@@ -1,17 +1,40 @@
 import { z } from 'zod'
-import { GameSchema } from './game'
+import { BaseGameSchema, GameSchema } from './game'
 import { RankSchema } from './rank'
 import { TeamSchema } from './team'
 
-export const GameResultSchema = z.object({
+export const defaultGameResultMetrics = {
+  pack_place: 0,
+  game_efficiency: 0,
+  pack_efficiency: 0,
+}
+
+export const GameResultMetricsSchema = z.object({
+  pack_place: z.number().default(defaultGameResultMetrics.pack_place),
+  game_efficiency: z.number().default(defaultGameResultMetrics.game_efficiency),
+  pack_efficiency: z.number().default(defaultGameResultMetrics.pack_efficiency),
+}).default(defaultGameResultMetrics)
+
+export const BaseGameResultSchema = z.object({
   _id: z.string(),
-  game: GameSchema,
+  game: BaseGameSchema.extend({
+    address: z.string().optional(),
+  }),
   team: TeamSchema,
   rounds: z.array(z.number()),
   sum: z.number(),
   place: z.number(),
-  rank: RankSchema.nullish(),
+  rank: RankSchema.nullable(),
   has_errors: z.boolean(),
 })
 
+export const GameResultSchema = BaseGameResultSchema.extend({
+  metrics: GameResultMetricsSchema,
+  game: GameSchema.extend({
+    address: z.string().optional(),
+  }),
+})
+
+export type BaseGameResult = z.infer<typeof BaseGameResultSchema>
 export type GameResult = z.infer<typeof GameResultSchema>
+export type GameResultMetrics = z.infer<typeof GameResultMetricsSchema>
