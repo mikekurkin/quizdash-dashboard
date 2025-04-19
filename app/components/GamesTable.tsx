@@ -131,6 +131,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<Game>[]
       const date = getValue() as Date
       return (
         <LinkCell row={row} tabIndex={-1}>
+          {/* TODO: format in city's timezone */}
           {date
             .toLocaleString('ru-RU', {
               year: '2-digit',

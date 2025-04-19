@@ -13,5 +13,6 @@ declare module 'i18next' {
       pack: typeof pack
     }
     returnNull: false
+    jsonFormat: 'v4'
   }
 }

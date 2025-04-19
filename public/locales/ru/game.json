@@ -20,6 +20,12 @@
   "infoLabels": {
     "date": "Когда",
     "location": "Где",
-    "teams": "команд"
-  }
+    "teams_one": "{{teamsCount}} команда",
+    "teams_few": "{{teamsCount}} команды",
+    "teams_many": "{{teamsCount}} команд",
+    "games_one": "{{gamesCount}} игра",
+    "games_few": "{{gamesCount}} игры",
+    "games_many": "{{gamesCount}} игр"
+  },
+  "otherPackGames": "Другие игры пакета"
 }

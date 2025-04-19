@@ -39,7 +39,8 @@ export async function loader({ params }: LoaderFunctionArgs) {
       title: t('title', { gameTitle }),
       columnHeaders: t('columnHeaders', { returnObjects: true }),
       complexityLabels: t('complexityLabels', { returnObjects: true, n: game.pack.metrics.topNAvg.n }),
-      infoLabels: t('infoLabels', { returnObjects: true }),
+      infoLabels: t('infoLabels', { returnObjects: true, teamsCount: results.length, gamesCount: 1 }),
+      otherPackGames: t('otherPackGames'),
     },
     game,
     results,
@@ -54,11 +55,21 @@ export async function loader({ params }: LoaderFunctionArgs) {
 export default function GameRoute() {
   const { t, game, results, otherPackGames } = useLoaderData<typeof loader>()
 
+  const infoLabels = {
+    ...t.infoLabels,
+    teams:
+      results.length % 10 === 1
+        ? t.infoLabels.teams_one
+        : results.length % 10 > 5 || results.length % 10 === 0
+          ? t.infoLabels.teams_many
+          : t.infoLabels.teams_few,
+  }
+
   return (
     <>
-      <div className="flex flex-row flex-wrap gap-4 items-stretch py-4 max-h-52 overflow-y-scroll">
+      <div className="flex flex-row flex-wrap gap-4 items-stretch py-4 max-h-52 overflow-y-auto">
         <Card>
-          <GameInfo game={game} teamsCount={results.length} labels={t.infoLabels} />
+          <GameInfo game={game} labels={infoLabels} />
         </Card>
         {game.pack.metrics.complexityGrade.sum !== undefined && game.pack.metrics.prevCount >= 5 && (
           <Card>
@@ -69,15 +80,15 @@ export default function GameRoute() {
           <Card>
             <CompactGamesList
               heading={
-                <div className="flex items-center justify-between text-sm mb-2">
+                <p className="text-muted-foreground/80 mb-1">
+                  {t.otherPackGames + ' '}
                   <Link
                     to={`/${game.city.slug}/pack/${game.series.slug}/${game.pack.number}`}
-                    className="hover:underline hover:text-muted-foreground decoration-dotted text-l font-bold mb-0"
+                    className="text-foreground/80 font-medium hover:underline hover:text-muted-foreground decoration-dotted"
                   >
-                    Пакет #{game.pack.number}
+                    #{game.pack.number}
                   </Link>
-                  <div className="text-sm text-muted-foreground/80 italic">другие игры:</div>
-                </div>
+                </p>
               }
               games={otherPackGames}
             />

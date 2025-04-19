@@ -3,5 +3,6 @@
     "title": "$t(common:appName): {{packTitle}}",
     "description": "Результаты прошедших игр пакета {{packTitle}}"
   },
-  "title": "Пакет: {{packTitle}}"
+  "title": "Пакет: {{packTitle}}",
+  "packGames": "Игры пакета"
 }

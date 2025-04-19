@@ -3,7 +3,6 @@ import { Game } from '~/schemas/game'
 interface GameInfoProps {
   className?: string
   game: Game
-  teamsCount: number
   labels: {
     location: string
     date: string
@@ -11,7 +10,7 @@ interface GameInfoProps {
   }
 }
 
-export function GameInfo({ className, game, teamsCount, labels }: GameInfoProps) {
+export function GameInfo({ className, game, labels }: GameInfoProps) {
   return (
     <div className={className}>
       <h1 className="text-2xl font-bold mb-2">
@@ -35,7 +34,7 @@ export function GameInfo({ className, game, teamsCount, labels }: GameInfoProps)
             .toLowerCase()}
         </div>
       </div>
-      <div className="text-sm text-muted-foreground">{teamsCount} {labels.teams}</div>
+      <div className="text-sm text-muted-foreground">{labels.teams}</div>
     </div>
   )
 }

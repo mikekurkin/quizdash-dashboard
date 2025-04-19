@@ -1,7 +1,10 @@
 import { MetaFunction, type LoaderFunctionArgs } from '@remix-run/node'
 import { useLoaderData } from '@remix-run/react'
+import { CompactGamesList } from '~/components/CompactGamesList'
 import { ComplexityGrade } from '~/components/ComplexityGrade'
+import { PackInfo } from '~/components/PackInfo'
 import { PackResultsTable } from '~/components/PackResultsTable'
+import Card from '~/components/ui/card'
 import i18next from '~/i18n/i18next.server'
 import { storage } from '~/services/storage.server'
 
@@ -30,7 +33,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
     throw new Response('Not Found', { status: 404 })
   }
 
-  const games = results.map((r) => r.game)
+  const games = await storage.getGamesByPack(series._id, params.number)
 
   const pack = games[0].pack
 
@@ -42,6 +45,8 @@ export async function loader({ params }: LoaderFunctionArgs) {
       title: t('title', { packTitle }),
       columnHeaders: t('game:columnHeaders', { returnObjects: true }),
       complexityLabels: t('game:complexityLabels', { returnObjects: true, n: pack.metrics.topNAvg.n }),
+      infoLabels: t('game:infoLabels', { returnObjects: true, teamsCount: results.length, gamesCount: games.length }),
+      packGames: t('packGames'),
     },
     pack,
     packTitle,
@@ -55,30 +60,42 @@ export async function loader({ params }: LoaderFunctionArgs) {
 }
 
 export default function PackRoute() {
-  const { t, results, pack, packTitle } = useLoaderData<typeof loader>()
+  const { t, results, pack, games, packTitle } = useLoaderData<typeof loader>()
+
+  const infoLabels = {
+    ...t.infoLabels,
+    games:
+      games.length % 10 === 1
+        ? t.infoLabels.games_one
+        : games.length % 10 > 5 || games.length % 10 === 0
+          ? t.infoLabels.games_many
+          : t.infoLabels.games_few,
+    teams:
+      results.length % 10 === 1
+        ? t.infoLabels.teams_one
+        : results.length % 10 > 5 || results.length % 10 === 0
+          ? t.infoLabels.teams_many
+          : t.infoLabels.teams_few,
+  }
+
   return (
-    
-      <>
-        <div className="flex flex-row gap-4 items-stretch py-4">
-          <div className="p-4 border rounded-lg w-[300px] flex flex-col">
-            <h1 className="text-2xl font-bold mb-4">{packTitle}</h1>
-            <div className="text-sm text-muted-foreground">
-              {/* <div>Date: {new Date(game.date).toLocaleDateString()}</div>
-              <div>Location: {game.location}</div> */}
-            </div>
-          </div>
-          {pack.metrics.complexityGrade.sum !== undefined && pack.metrics.prevCount >= 5 && (
-            <ComplexityGrade
-              metrics={pack.metrics}
-              className="p-4 border rounded-lg w-[300px] flex flex-col"
-              labels={t.complexityLabels}
-            />
-          )}
-        </div>
-        <div>
-          <PackResultsTable results={results} columnHeaders={t.columnHeaders} />
-        </div>
-      </>
-    
+    <>
+      <div className="flex flex-row flex-wrap gap-4 items-stretch py-4 max-h-52 overflow-y-auto">
+        <Card>
+          <PackInfo packTitle={packTitle} labels={infoLabels} />
+        </Card>
+        {pack.metrics.complexityGrade.sum !== undefined && pack.metrics.prevCount >= 5 && (
+          <Card>
+            <ComplexityGrade metrics={pack.metrics} labels={t.complexityLabels} />
+          </Card>
+        )}
+        <Card>
+          <CompactGamesList heading={<p className="text-muted-foreground/80 mb-1">Игры пакета</p>} games={games} />
+        </Card>
+      </div>
+      <div>
+        <PackResultsTable results={results} columnHeaders={t.columnHeaders} />
+      </div>
+    </>
   )
 }
