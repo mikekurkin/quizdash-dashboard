@@ -1,0 +1,19 @@
+services:
+  quizdash:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+
+    environment:
+      - NODE_ENV=production
+      - GITHUB_OWNER=${GITHUB_OWNER}
+      - GITHUB_REPO=${GITHUB_REPO}
+      - GITHUB_BRANCH=${GITHUB_BRANCH:-main}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - GITHUB_PATH=${GITHUB_PATH}
+      - GITHUB_WEBHOOK_SECRET=${GITHUB_WEBHOOK_SECRET}
+    env_file:
+      - .env
