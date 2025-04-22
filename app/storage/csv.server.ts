@@ -1,6 +1,7 @@
 import { parse } from 'csv-parse'
 import { createReadStream } from 'fs'
 import path from 'path'
+import { getDataSourceConfig } from '~/config/environment.server'
 import { City, CitySchema } from '~/schemas/city'
 import { DerivedData } from '~/schemas/derivedData'
 import { BaseGame, BaseGameSchema, Game, GamesResponse, GamesResponseSchema } from '~/schemas/game'
@@ -9,13 +10,16 @@ import { Pack } from '~/schemas/pack'
 import { Rank, RankSchema } from '~/schemas/rank'
 import { Series, SeriesSchema } from '~/schemas/series'
 import { Team, TeamSchema, TeamsResponse, TeamsResponseSchema } from '~/schemas/team'
+import { dataSyncService } from '~/services/dataSync.server'
 import { MetricsCalculator } from '~/services/metrics.server'
 import { QueryParams } from '~/types/data'
 import { CsvCache } from './csvCache.server'
 import { DerivedDataJoiner } from './derivedDataJoiner.server'
 import { GetGamesParams, Storage } from './interface.server'
 
-const DATA_DIR = path.join(process.cwd(), 'data.fuller')
+// Get data directory from environment configuration
+const config = getDataSourceConfig()
+const DATA_DIR = path.join(process.cwd(), config.dataDir)
 
 interface RawCsvGame {
   _id: string
@@ -82,6 +86,106 @@ export class CsvStorage implements Storage {
   }
 
   private calculator = new MetricsCalculator()
+  private dataSourceConfig = config
+
+  constructor() {
+    // Initialize data and then preload caches
+    this.initializeDataAndPreloadCaches()
+  }
+
+  /**
+   * Initialize data and then preload caches in the correct sequence
+   */
+  private async initializeDataAndPreloadCaches(): Promise<void> {
+    try {
+      // First make sure all data is downloaded
+      console.log('Initializing data...')
+      await this.initializeData()
+      console.log('Data initialization complete')
+
+      // Then preload caches after a short delay
+      setTimeout(() => {
+        console.log('Initiating cache preloading after data initialization...')
+        this.preloadCriticalCaches()
+          .then(() => {
+            console.log('Application startup cache preloading completed')
+          })
+          .catch((error) => {
+            console.error('Error during startup cache preloading:', error)
+          })
+      }, 1000) // Small delay before preloading
+    } catch (error) {
+      console.error('Failed to initialize data and preload caches:', error)
+    }
+  }
+
+  /**
+   * Initialize data based on configuration
+   */
+  private async initializeData(): Promise<void> {
+    try {
+      // Wait for data to be fully initialized before returning
+      await dataSyncService.initializeData()
+    } catch (error) {
+      console.error('Failed to initialize data:', error)
+      throw error // Rethrow to propagate the error up
+    }
+  }
+
+  /**
+   * Refresh data from external source (used by the refresh-data route)
+   */
+  public async refreshData(): Promise<boolean> {
+    const success = await dataSyncService.syncDataFromGitHub()
+
+    if (success) {
+      console.log('Data refresh successful, invalidating caches')
+
+      // Invalidate all caches
+      Object.values(this.cache).forEach((cache) => cache.invalidate())
+
+      // Asynchronously preload the most computationally expensive data
+      // This happens in the background after returning success response to the client
+      this.preloadCriticalCaches().catch((error) => {
+        console.error('Error preloading caches after refresh:', error)
+      })
+    }
+
+    return success
+  }
+
+  /**
+   * Preload critical caches after data refresh to prevent user-facing delays
+   * This is run asynchronously after a refresh operation
+   */
+  private async preloadCriticalCaches(): Promise<void> {
+    console.log('Starting to preload critical caches...')
+    const startTime = performance.now()
+
+    try {
+      // Preload essential data first - these will be needed by most operations
+      const [_cities, _series, _ranks] = await Promise.all([this.getCities(), this.getSeries(), this.getRanks()])
+
+      console.log(`Basic data preloaded in ${((performance.now() - startTime) / 1000).toFixed(2)}s`)
+
+      // Preload the most computation-heavy caches in parallel
+      // These are typically the ones that need derived calculations
+      await Promise.all([
+        // Games and teams are dependencies for results, so they get loaded anyway
+        this.getRawGames(),
+        this.getRawTeams(),
+
+        // This triggers the most expensive calculations (metrics)
+        this.getDerivedData(),
+      ])
+
+      const totalTime = (performance.now() - startTime) / 1000
+      console.log(`Critical caches preloaded in ${totalTime.toFixed(2)}s`)
+    } catch (error) {
+      console.error('Error during cache preloading:', error)
+      throw error
+    }
+  }
 
   // Raw data methods
   private async getRawGameResults(): Promise<BaseGameResult[]> {
@@ -99,8 +203,8 @@ export class CsvStorage implements Storage {
         // Parse results in batches
         const parsedResults: BaseGameResult[] = []
         const batchSize = 1000
-        let batchParsed = 0
-        let batchSkipped = 0
+        let _batchParsed = 0
+        let _batchSkipped = 0
 
         for (let i = 0; i < records.length; i += batchSize) {
           const batch = records.slice(i, i + batchSize)
@@ -117,13 +221,13 @@ export class CsvStorage implements Storage {
               const rank = rankId ? ranksMap.get(rankId) : null
 
               if (!game || !team) {
-                batchSkipped++
+                _batchSkipped++
                 continue
               }
 
               // If rank_id exists but rank not found, skip
               if (rankId && !rank) {
-                batchSkipped++
+                _batchSkipped++
                 continue
               }
 
@@ -140,9 +244,9 @@ export class CsvStorage implements Storage {
               })
 
               parsedResults.push(parsed)
-              batchParsed++
+              _batchParsed++
             } catch (e) {
-              batchSkipped++
+              _batchSkipped++
             }
           }
         }
@@ -166,11 +270,11 @@ export class CsvStorage implements Storage {
         // Process games in batches
         const batchSize = 1000
         const parsedGames: BaseGame[] = []
+        let _batchParsed = 0
+        let _batchSkipped = 0
 
         for (let i = 0; i < records.length; i += batchSize) {
           const batch = records.slice(i, i + batchSize)
-          let batchParsed = 0
-          let batchSkipped = 0
 
           for (const record of batch) {
             const serie = seriesMap.get(record.series_id)
@@ -204,10 +308,10 @@ export class CsvStorage implements Storage {
 
                 const parsed = BaseGameSchema.parse(game)
                 parsedGames.push(parsed)
-                batchParsed++
+                _batchParsed++
               } catch (e) {
                 console.error('Failed to parse game:', e, 'Record:', record)
-                batchSkipped++
+                _batchSkipped++
               }
             } else {
               console.log(`Skipping game ${record._id}, missing serie or city:`, {
@@ -216,7 +320,7 @@ export class CsvStorage implements Storage {
                 series_id: record.series_id,
                 city_id: record.city_id,
               })
-              batchSkipped++
+              _batchSkipped++
             }
           }
         }
