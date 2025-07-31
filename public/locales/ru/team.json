@@ -5,8 +5,8 @@
   },
   "title": "Команда: {{teamTitle}}",
   "columnHeaders": {
-    "place": "Место",
-    "pack_place": "По паку",
+    "place": "# в игре",
+    "pack_place": "# в паке",
     "team": "Команда",
     "sum": "Сумма",
     "efficiency": "Эффективность",

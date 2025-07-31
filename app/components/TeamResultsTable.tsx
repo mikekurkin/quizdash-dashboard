@@ -48,7 +48,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
   {
     accessorKey: 'game._id',
     header: columnHeaders['_id'],
-    maxSize: 100,
+    size: 50,
     cell: ({ row }) => {
       return <LinkCell row={row}>{row.original.game._id}</LinkCell>
     },
@@ -56,7 +56,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
   {
     accessorKey: 'game.series.name',
     header: columnHeaders['series.name'],
-    maxSize: 150,
+    size: 300,
     cell: ({ row }) => {
       return (
         <LinkCell row={row} tabIndex={-1}>
@@ -73,7 +73,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
   {
     accessorKey: 'game.pack.formatted',
     header: columnHeaders['number'],
-    maxSize: 120,
+    maxSize: 100,
     cell: ({ row }) => {
       const { city, series, pack } = row.original.game
       return (
@@ -89,7 +89,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
   {
     accessorKey: 'game.pack.derived.complexityGrade.sum',
     header: columnHeaders['complexity'],
-    maxSize: 120,
+    size: 100,
     cell: ({ row }) => {
       const { prevCount } = row.original.game.pack.metrics
       const { sum } = row.original.game.pack.metrics.complexityGrade
@@ -122,7 +122,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
   {
     accessorKey: 'game.date',
     header: columnHeaders['date'],
-    maxSize: 150,
+    size: 150,
     cell: ({ row, getValue }) => {
       const date = getValue() as Date
       return (
@@ -145,7 +145,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
   {
     accessorKey: 'game.location',
     header: columnHeaders['location'],
-    maxSize: 200,
+    size: 150,
     cell: ({ row }) => {
       return (
         <LinkCell row={row} tabIndex={-1}>
@@ -162,7 +162,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
   {
     accessorKey: 'sum',
     header: columnHeaders['sum'],
-    maxSize: 50,
+    size: 80,
     cell: ({ row }) => {
       return <LinkCell row={row}>{row.original.sum}</LinkCell>
     },
@@ -170,7 +170,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
   {
     accessorKey: 'place',
     header: columnHeaders['place'],
-    maxSize: 50,
+    size: 40,
     cell: ({ row }) => {
       return <LinkCell row={row}>{row.original.place}</LinkCell>
     },
@@ -178,7 +178,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
   {
     accessorKey: 'metrics.pack_place',
     header: columnHeaders['pack_place'],
-    maxSize: 50,
+    size: 40,
     cell: ({ row }) => {
       const { city, series, pack } = row.original.game
       return (

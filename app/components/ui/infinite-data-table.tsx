@@ -73,7 +73,13 @@ export function InfiniteDataTable<TData, TValue>({
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id} className={cn('border-b hover:bg-inherit', extraClassNames?.row)}>
             {headerGroup.headers.map((header) => (
-              <TableHead key={header.id} className={extraClassNames?.head}>
+              <TableHead
+                key={header.id}
+                className={extraClassNames?.head}
+                style={{
+                  width: header.getSize(),
+                }}
+              >
                 {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
               </TableHead>
             ))}
@@ -88,7 +94,11 @@ export function InfiniteDataTable<TData, TValue>({
             {table.getRowModel().rows.map((row) => (
               <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className={extraClassNames?.row}>
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell className={extraClassNames?.cell} key={cell.id}>
+                  <TableCell
+                    className={cn(extraClassNames?.cell)}
+                    key={cell.id}
+                    style={{ width: cell.column.getSize() }}
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}

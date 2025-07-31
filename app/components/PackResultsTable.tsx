@@ -12,12 +12,12 @@ const createGameResultsColumns = (
     {
       accessorKey: 'metrics.pack_place',
       header: columnHeaders['place'] || '#',
-      maxSize: 80,
+      size: 80,
     },
     {
       accessorKey: 'team.name',
       header: columnHeaders['team'] || 'Team',
-      maxSize: 200,
+      size: 400,
       cell: ({ row }) => {
         const {
           game: { city },
@@ -40,19 +40,19 @@ const createGameResultsColumns = (
   const roundColumns: ColumnDef<GameResult>[] = Array.from({ length: maxRounds }).map((_, index) => ({
     accessorFn: (row) => row.rounds[index],
     header: (index + 1).toString(),
-    maxSize: 60,
+    maxSize: 50,
   }))
 
   const finalColumns: ColumnDef<GameResult>[] = [
     {
       accessorKey: 'sum',
       header: columnHeaders['sum'] || 'Sum',
-      maxSize: 100,
+      size: 100,
     },
     {
       accessorKey: 'metrics.game_efficiency',
       header: columnHeaders['efficiency'] || 'Efficiency',
-      maxSize: 120,
+      size: 120,
       cell: ({ row }) => `${(row.original.metrics.pack_efficiency * 100).toFixed(1)}%`,
     },
   ]

@@ -8,8 +8,8 @@ import { cn } from '~/lib/utils'
 import { City } from '~/schemas/city'
 import type { Game, GamesResponse } from '~/schemas/game'
 import { ComplexityGrade } from './ComplexityGrade'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 import { TableWrapper } from './ui/table-wrapper'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 
 const LinkCell = ({
   row,
@@ -49,7 +49,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<Game>[]
   {
     accessorKey: '_id',
     header: columnHeaders['_id'],
-    maxSize: 100,
+    size: 50,
     cell: ({ row }) => {
       return <LinkCell row={row}>{row.original._id}</LinkCell>
     },
@@ -57,7 +57,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<Game>[]
   {
     accessorKey: 'series.name',
     header: columnHeaders['series.name'],
-    maxSize: 150,
+    size: 300,
     cell: ({ row }) => {
       return (
         <LinkCell row={row} tabIndex={-1}>
@@ -74,15 +74,12 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<Game>[]
   {
     accessorKey: 'pack.formatted',
     header: columnHeaders['number'],
-    maxSize: 120,
+    size: 100,
     cell: ({ row }) => {
       const { city, series, pack } = row.original
       return (
         <LinkCell row={row} tabIndex={-1}>
-          <Link
-            className="group hover:text-inherit"
-            to={`/${city.slug}/pack/${series.slug}/${pack.number}`}
-          >
+          <Link className="group hover:text-inherit" to={`/${city.slug}/pack/${series.slug}/${pack.number}`}>
             <span className="group-hover:text-muted-foreground group-hover:underline decoration-dotted">{`#${pack.number}`}</span>
             <span>{`.${pack.replay_number}`}</span>
           </Link>
@@ -93,7 +90,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<Game>[]
   {
     accessorKey: 'pack.derived.complexityGrade.sum',
     header: columnHeaders['complexity'],
-    maxSize: 120,
+    size: 100,
     cell: ({ row }) => {
       const { prevCount } = row.original.pack.metrics
       const { sum } = row.original.pack.metrics.complexityGrade
@@ -149,7 +146,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<Game>[]
   {
     accessorKey: 'location',
     header: columnHeaders['location'],
-    maxSize: 200,
+    maxSize: 150,
     cell: ({ row }) => {
       return (
         <LinkCell row={row} tabIndex={-1}>

@@ -13,13 +13,13 @@ export const createGameResultsColumns = (
     {
       accessorKey: 'place',
       header: columnHeaders['place'] || '#',
-      maxSize: 80,
+      size: 80,
       cell: ({ row }) => row.original.place,
     },
     {
       accessorKey: 'team.name',
       header: columnHeaders['team'] || 'Team',
-      maxSize: 200,
+      size: 400,
       cell: ({ row }) => {
         const {
           game: { city },
@@ -42,7 +42,7 @@ export const createGameResultsColumns = (
   const roundColumns: ColumnDef<GameResult>[] = Array.from({ length: maxRounds }).map((_, index) => ({
     accessorFn: (row) => row.rounds[index],
     header: (index + 1).toString(),
-    maxSize: 60,
+    size: 50,
   }))
 
   const finalColumns: ColumnDef<GameResult>[] = [

@@ -36,7 +36,13 @@ export function DataTable<TData, TValue>({
         {table.getHeaderGroups().map((headerGroup) => (
           <TableRow key={headerGroup.id} className={cn('border-b', extraClassNames?.row)}>
             {headerGroup.headers.map((header) => (
-              <TableHead key={header.id} className={cn('bg-background', extraClassNames?.head)}>
+              <TableHead
+                key={header.id}
+                className={cn('bg-background', extraClassNames?.head)}
+                style={{
+                  width: header.getSize(),
+                }}
+              >
                 {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
               </TableHead>
             ))}
@@ -48,7 +54,7 @@ export function DataTable<TData, TValue>({
           table.getRowModel().rows.map((row) => (
             <TableRow key={row.id} data-state={row.getIsSelected() && 'selected'} className={extraClassNames?.row}>
               {row.getVisibleCells().map((cell) => (
-                <TableCell key={cell.id} className={extraClassNames?.cell}>
+                <TableCell key={cell.id} className={extraClassNames?.cell} style={{ width: cell.column.getSize() }}>
                   {flexRender(cell.column.columnDef.cell, cell.getContext())}
                 </TableCell>
               ))}
