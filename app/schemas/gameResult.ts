@@ -9,11 +9,13 @@ export const defaultGameResultMetrics = {
   pack_efficiency: 0,
 }
 
-export const GameResultMetricsSchema = z.object({
-  pack_place: z.number().default(defaultGameResultMetrics.pack_place),
-  game_efficiency: z.number().default(defaultGameResultMetrics.game_efficiency),
-  pack_efficiency: z.number().default(defaultGameResultMetrics.pack_efficiency),
-}).default(defaultGameResultMetrics)
+export const GameResultMetricsSchema = z
+  .object({
+    pack_place: z.number().default(defaultGameResultMetrics.pack_place),
+    game_efficiency: z.number().default(defaultGameResultMetrics.game_efficiency),
+    pack_efficiency: z.number().default(defaultGameResultMetrics.pack_efficiency),
+  })
+  .default(defaultGameResultMetrics)
 
 export const BaseGameResultSchema = z.object({
   _id: z.string(),

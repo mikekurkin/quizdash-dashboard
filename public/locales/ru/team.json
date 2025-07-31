@@ -1,15 +1,21 @@
 {
   "meta": {
-    "title": "$t(common:appName): {{gameTitle}}",
-    "description": "Результаты прошедшей игры {{gameTitle}}"
+    "title": "$t(common:appName): {{teamTitle}}",
+    "description": "Результаты прошедших игр команды {{teamTitle}}"
   },
-  "title": "Игра: {{gameTitle}}",
+  "title": "Команда: {{teamTitle}}",
   "columnHeaders": {
     "place": "Место",
     "pack_place": "По паку",
     "team": "Команда",
     "sum": "Сумма",
-    "efficiency": "Эффективность"
+    "efficiency": "Эффективность",
+    "gameId": "ID",
+    "series": "Серия",
+    "gameNumber": "Пакет",
+    "date": "Дата",
+    "location": "Место",
+    "complexity": "Сложность"
   },
   "complexityLabels": {
     "sumComplexity": "Cложность пакета",

@@ -34,6 +34,7 @@ export interface Storage {
   getTeamResults(teamId: string): Promise<GameResult[]>
   getGameResultsByPack(seriesId: string, packNumber: string): Promise<GameResult[]>
   getGameResultsByCity(cityId: number): Promise<GameResult[]>
+  getGameResultsByTeam(teamId: string): Promise<GameResult[]>
   getMaxScoreByPack(seriesId: string, packNumber: string): Promise<number>
 
   // Team operations

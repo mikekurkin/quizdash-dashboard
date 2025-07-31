@@ -1,3 +1,4 @@
+import { Link } from '@remix-run/react'
 import type { ColumnDef } from '@tanstack/react-table'
 import { DataTable } from '~/components/ui/data-table'
 import { cn } from '~/lib/utils'
@@ -19,7 +20,20 @@ export const createGameResultsColumns = (
       accessorKey: 'team.name',
       header: columnHeaders['team'] || 'Team',
       maxSize: 200,
-      cell: ({ row }) => row.original.team.name,
+      cell: ({ row }) => {
+        const {
+          game: { city },
+          team,
+        } = row.original
+        return (
+          <Link
+            className="hover:text-muted-foreground hover:underline decoration-dotted"
+            to={`/${city.slug}/team/${team.slug}`}
+          >
+            {row.original.team.name}
+          </Link>
+        )
+      },
     },
   ]
 

@@ -75,14 +75,46 @@ interface RawCsvSeries {
 }
 
 export class CsvStorage implements Storage {
+  private dataDir = DATA_DIR
+
   private cache = {
-    cities: new CsvCache<City[], RawCsvCity[]>('cities.csv', DATA_DIR),
-    games: new CsvCache<BaseGame[], RawCsvGame[]>('games.csv', DATA_DIR),
-    results: new CsvCache<BaseGameResult[], RawCsvResult[]>('results.csv', DATA_DIR),
-    ranks: new CsvCache<Rank[], RawCsvRank[]>('ranks.csv', DATA_DIR),
-    series: new CsvCache<Series[], RawCsvSeries[]>('series.csv', DATA_DIR),
-    teams: new CsvCache<Team[], RawCsvTeam[]>('teams.csv', DATA_DIR),
-    derivedData: new CsvCache<DerivedData, BaseGameResult[]>('results.csv', DATA_DIR),
+    games: new CsvCache<BaseGame[], RawCsvGame[]>('games.csv', this.dataDir),
+    results: new CsvCache<BaseGameResult[], RawCsvResult[]>('results.csv', this.dataDir),
+    teams: new CsvCache<Team[], RawCsvTeam[]>('teams.csv', this.dataDir),
+    cities: new CsvCache<City[], RawCsvCity[]>('cities.csv', this.dataDir),
+    series: new CsvCache<Series[], RawCsvSeries[]>('series.csv', this.dataDir),
+    ranks: new CsvCache<Rank[], RawCsvRank[]>('ranks.csv', this.dataDir),
+    derivedData: new CsvCache<DerivedData, BaseGameResult[]>('results.csv', this.dataDir),
+  }
+
+  // Manual indexes for performance
+  private resultsByTeam = new Map<string, BaseGameResult[]>()
+  private resultsByCity = new Map<number, BaseGameResult[]>()
+
+  private buildResultsIndexes(results: BaseGameResult[]): void {
+    // Clear existing indexes
+    this.resultsByTeam.clear()
+    this.resultsByCity.clear()
+
+    // Build indexes
+    for (const result of results) {
+      // Index by team
+      if (!this.resultsByTeam.has(result.team._id)) {
+        this.resultsByTeam.set(result.team._id, [])
+      }
+      this.resultsByTeam.get(result.team._id)!.push(result)
+
+      // Index by city
+      if (!this.resultsByCity.has(result.game.city._id)) {
+        this.resultsByCity.set(result.game.city._id, [])
+      }
+      this.resultsByCity.get(result.game.city._id)!.push(result)
+    }
+  }
+
+  private clearResultsIndexes(): void {
+    this.resultsByTeam.clear()
+    this.resultsByCity.clear()
   }
 
   private calculator = new MetricsCalculator()
@@ -140,6 +172,9 @@ export class CsvStorage implements Storage {
 
     if (success) {
       console.log('Data refresh successful, invalidating caches')
+
+      // Clear indexes since data has changed
+      this.clearResultsIndexes()
 
       // Invalidate all caches
       Object.values(this.cache).forEach((cache) => cache.invalidate())
@@ -409,7 +444,12 @@ export class CsvStorage implements Storage {
         ? await this.getCityBySlug(params.citySlug)
         : null
 
+    const filterIds = params?.teamId
+      ? (await this.getGameResultsByTeam(params.teamId)).map((result) => result.game._id)
+      : null
+
     const filteredGames = allGames.filter((game) => {
+      if (filterIds && !filterIds.includes(game._id)) return false
       if (city && game.city._id !== city._id) return false
       if (params?.seriesId && game.series._id !== params.seriesId) return false
       if (params?.packNumber && game.pack.number !== params.packNumber) return false
@@ -429,6 +469,7 @@ export class CsvStorage implements Storage {
           game.location.toLowerCase().includes(search)
         )
       }
+
       return true
     })
 
@@ -478,10 +519,15 @@ export class CsvStorage implements Storage {
 
   async getGameResultsByCity(cityId: number): Promise<GameResult[]> {
     const allResults = await this.getRawGameResults()
-    const filteredResults = allResults.filter((result) => result.game.city._id === cityId)
 
+    // Build indexes if not already built
+    if (this.resultsByCity.size === 0) {
+      this.buildResultsIndexes(allResults)
+    }
+
+    const results = this.resultsByCity.get(cityId) || []
     const joiner = await this.getJoiner()
-    return joiner.joinToGameResults(filteredResults)
+    return joiner.joinToGameResults(results)
   }
 
   async getGameResultsByPack(seriesId: string, packNumber: string): Promise<GameResult[]> {
@@ -489,6 +535,14 @@ export class CsvStorage implements Storage {
     const filteredResults = allResults.filter(
       (result) => result.game.series._id === seriesId && result.game.pack.number === packNumber
     )
+
+    const joiner = await this.getJoiner()
+    return joiner.joinToGameResults(filteredResults)
+  }
+
+  async getGameResultsByTeam(teamId: string): Promise<GameResult[]> {
+    const allResults = await this.getRawGameResults()
+    const filteredResults = allResults.filter((result) => result.team._id === teamId)
 
     const joiner = await this.getJoiner()
     return joiner.joinToGameResults(filteredResults)
@@ -588,11 +642,16 @@ export class CsvStorage implements Storage {
   }
 
   async getTeamResults(teamId: string): Promise<GameResult[]> {
-    const results = await this.getRawGameResults()
-    const filteredResults = results.filter((result) => result.team._id === teamId)
+    const allResults = await this.getRawGameResults()
 
+    // Build indexes if not already built
+    if (this.resultsByTeam.size === 0) {
+      this.buildResultsIndexes(allResults)
+    }
+
+    const results = this.resultsByTeam.get(teamId) || []
     const joiner = await this.getJoiner()
-    return joiner.joinToGameResults(filteredResults)
+    return joiner.joinToGameResults(results)
   }
 
   private async readCsvFile<T>(filename: string, options: { columns: boolean } = { columns: true }): Promise<T[]> {

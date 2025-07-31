@@ -1,7 +1,7 @@
+import { Link } from '@remix-run/react'
 import { ColumnDef } from '@tanstack/react-table'
 import { DataTable } from '~/components/ui/data-table'
 import { TableWrapper } from '~/components/ui/table-wrapper'
-import { cn } from '~/lib/utils'
 import type { GameResult } from '~/schemas/gameResult'
 
 const createGameResultsColumns = (
@@ -18,6 +18,20 @@ const createGameResultsColumns = (
       accessorKey: 'team.name',
       header: columnHeaders['team'] || 'Team',
       maxSize: 200,
+      cell: ({ row }) => {
+        const {
+          game: { city },
+          team,
+        } = row.original
+        return (
+          <Link
+            className="hover:text-muted-foreground hover:underline decoration-dotted"
+            to={`/${city.slug}/team/${team.slug}`}
+          >
+            {row.original.team.name}
+          </Link>
+        )
+      },
     },
   ]
 
@@ -53,11 +67,11 @@ interface PackResultsTableProps {
   className?: string
 }
 
-export function PackResultsTable({ results, columnHeaders = {}, noResults, className }: PackResultsTableProps) {
+export function PackResultsTable({ results, columnHeaders = {}, noResults }: PackResultsTableProps) {
   const columns = createGameResultsColumns(columnHeaders, results)
 
   return (
-    <TableWrapper heightClassName='max-sm:max-h-[calc(100dvh-10rem)]'>
+    <TableWrapper heightClassName="max-sm:max-h-[calc(100dvh-10rem)]">
       <DataTable
         columns={columns}
         data={results}
