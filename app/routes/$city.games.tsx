@@ -43,12 +43,12 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
   return {
     t: {
       title: t('title'),
-      endOfResults: t('endOfResults'),
-      noResults: t('noResults'),
+      endOfResults: t('common:endOfResults'),
+      noResults: t('common:noResults'),
       columnHeaders,
       searchLabel: t('search.label'),
       searchPlaceholder: t('search.placeholder'),
-      selectDatePlaceholder: t('datePicker.placeholder'),
+      selectDatePlaceholder: t('common:datePicker.placeholder'),
     },
     searchParams,
     games: {

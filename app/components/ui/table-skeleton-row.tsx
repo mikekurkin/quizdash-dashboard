@@ -1,4 +1,4 @@
-import { useMemo } from 'react'
+import { forwardRef, useMemo } from 'react'
 import { Skeleton } from './skeleton'
 import { TableCell, TableRow } from './table'
 
@@ -17,20 +17,24 @@ function getRandomWidth(seed: number) {
   return `${Math.floor(random * 30) + 60}%`
 }
 
-export function TableSkeletonRow({ columns, className, dataSentinel, index = 0 }: TableSkeletonRowProps) {
-  // Generate consistent widths using useMemo and index as seed
-  const widths = useMemo(
-    () => Array.from({ length: columns }, (_, i) => getRandomWidth(index * columns + i)),
-    [columns, index]
-  )
+export const TableSkeletonRow = forwardRef<HTMLTableRowElement, TableSkeletonRowProps>(
+  ({ columns, className, dataSentinel, index = 0 }, ref) => {
+    // Generate consistent widths using useMemo and index as seed
+    const widths = useMemo(
+      () => Array.from({ length: columns }, (_, i) => getRandomWidth(index * columns + i)),
+      [columns, index]
+    )
 
-  return (
-    <TableRow className={className} data-sentinel={dataSentinel}>
-      {widths.map((width, i) => (
-        <TableCell key={i}>
-          <Skeleton className="h-6" style={{ width }} />
-        </TableCell>
-      ))}
-    </TableRow>
-  )
-}
+    return (
+      <TableRow className={className} data-sentinel={dataSentinel} ref={ref}>
+        {widths.map((width, i) => (
+          <TableCell key={i}>
+            <Skeleton className="h-6" style={{ width }} />
+          </TableCell>
+        ))}
+      </TableRow>
+    )
+  }
+)
+
+TableSkeletonRow.displayName = 'TableSkeletonRow'

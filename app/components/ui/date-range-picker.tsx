@@ -24,6 +24,8 @@ export function DateRangePicker({
   const timeoutRef = React.useRef<NodeJS.Timeout>()
   const [suspendHover, setSuspendHover] = React.useState(false)
 
+  React.useEffect(() => setDate(initialDate), [initialDate])
+
   const handleMouseEnter = () => {
     clearTimeout(timeoutRef.current)
     setOpen(true)

@@ -5,17 +5,23 @@ import { getDataSourceConfig } from '~/config/environment.server'
 import { City, CitySchema } from '~/schemas/city'
 import { DerivedData } from '~/schemas/derivedData'
 import { BaseGame, BaseGameSchema, Game, GamesResponse, GamesResponseSchema } from '~/schemas/game'
-import { BaseGameResult, BaseGameResultSchema, GameResult } from '~/schemas/gameResult'
+import {
+  BaseGameResult,
+  BaseGameResultSchema,
+  GameResult,
+  GameResultsResponse,
+  MinimalGameResult,
+} from '~/schemas/gameResult'
 import { Pack } from '~/schemas/pack'
 import { Rank, RankSchema } from '~/schemas/rank'
-import { Series, SeriesSchema } from '~/schemas/series'
+import { BaseSeries, BaseSeriesSchema, Series } from '~/schemas/series'
 import { Team, TeamSchema, TeamsResponse, TeamsResponseSchema } from '~/schemas/team'
 import { dataSyncService } from '~/services/dataSync.server'
 import { MetricsCalculator } from '~/services/metrics.server'
 import { QueryParams } from '~/types/data'
 import { CsvCache } from './csvCache.server'
 import { DerivedDataJoiner } from './derivedDataJoiner.server'
-import { GetGamesParams, Storage } from './interface.server'
+import { FindTeamResultsParams, GetGamesParams, Storage } from './interface.server'
 
 // Get data directory from environment configuration
 const config = getDataSourceConfig()
@@ -82,7 +88,7 @@ export class CsvStorage implements Storage {
     results: new CsvCache<BaseGameResult[], RawCsvResult[]>('results.csv', this.dataDir),
     teams: new CsvCache<Team[], RawCsvTeam[]>('teams.csv', this.dataDir),
     cities: new CsvCache<City[], RawCsvCity[]>('cities.csv', this.dataDir),
-    series: new CsvCache<Series[], RawCsvSeries[]>('series.csv', this.dataDir),
+    series: new CsvCache<BaseSeries[], RawCsvSeries[]>('series.csv', this.dataDir),
     ranks: new CsvCache<Rank[], RawCsvRank[]>('ranks.csv', this.dataDir),
     derivedData: new CsvCache<DerivedData, BaseGameResult[]>('results.csv', this.dataDir),
   }
@@ -199,7 +205,7 @@ export class CsvStorage implements Storage {
 
     try {
       // Preload essential data first - these will be needed by most operations
-      const [_cities, _series, _ranks] = await Promise.all([this.getCities(), this.getSeries(), this.getRanks()])
+      const [_cities, _series, _ranks] = await Promise.all([this.getCities(), this.getRawSeries(), this.getRanks()])
 
       console.log(`Basic data preloaded in ${((performance.now() - startTime) / 1000).toFixed(2)}s`)
 
@@ -296,7 +302,7 @@ export class CsvStorage implements Storage {
       () => this.readCsvFile('games.csv'),
       async (records) => {
         // Fetch related data first
-        const [series, cities] = await Promise.all([this.getSeries(), this.getCities()])
+        const [series, cities] = await Promise.all([this.getRawSeries(), this.getCities()])
 
         // Create lookup maps
         const seriesMap = new Map(series.map((s) => [s._id, s]))
@@ -444,6 +450,13 @@ export class CsvStorage implements Storage {
         ? await this.getCityBySlug(params.citySlug)
         : null
 
+    const seriesId =
+      (params?.seriesId
+        ? params?.seriesId
+        : params?.seriesSlug
+          ? (await this.getSeriesBySlug(params?.seriesSlug))?._id
+          : null) ?? null
+
     const filterIds = params?.teamId
       ? (await this.getGameResultsByTeam(params.teamId)).map((result) => result.game._id)
       : null
@@ -451,7 +464,7 @@ export class CsvStorage implements Storage {
     const filteredGames = allGames.filter((game) => {
       if (filterIds && !filterIds.includes(game._id)) return false
       if (city && game.city._id !== city._id) return false
-      if (params?.seriesId && game.series._id !== params.seriesId) return false
+      if (seriesId && game.series._id !== seriesId) return false
       if (params?.packNumber && game.pack.number !== params.packNumber) return false
       if (
         params?.dateFrom &&
@@ -481,10 +494,16 @@ export class CsvStorage implements Storage {
     const paginatedGames = sortedGames.slice(offset, offset + limit)
 
     const joiner = await this.getJoiner()
-    return GamesResponseSchema.strip().parse({
-      data: joiner.joinToGames(paginatedGames),
-      nextCursor: endIndex < filteredGames.length ? endIndex : null,
-    })
+    try {
+      const parsedresponse = GamesResponseSchema.strip().parse({
+        data: joiner.joinToGames(paginatedGames),
+        nextCursor: endIndex < filteredGames.length ? endIndex : null,
+      })
+      return parsedresponse
+    } catch (e) {
+      console.log(joiner.joinToGames(paginatedGames).map((game) => game.series))
+      throw e
+    }
   }
 
   async getGameById(id: number): Promise<Game | null> {
@@ -509,12 +528,30 @@ export class CsvStorage implements Storage {
     return joiner.joinToGames(filteredGames)
   }
 
-  async getGameResults(gameId: number): Promise<GameResult[]> {
+  async getGameResults(gameId: number | number[]): Promise<GameResult[]> {
+    if (Array.isArray(gameId))
+      return Promise.all(gameId.map((id) => this.getGameResults(id))).then((results) => results.flat())
+
     const allResults = await this.getRawGameResults()
     const filteredResults = allResults.filter((result) => result.game._id === gameId)
 
     const joiner = await this.getJoiner()
     return joiner.joinToGameResults(filteredResults)
+  }
+
+  async findTeamResults({ teamId, ...params }: FindTeamResultsParams): Promise<GameResultsResponse> {
+    const gamesResponse = await this.getGamesByTeam({ teamId, ...params })
+
+    const gameIds = gamesResponse.data.map((game) => game._id)
+    const results = (await this.getGameResults(gameIds)).filter((result) => result.team._id === teamId)
+
+    const joiner = await this.getJoiner()
+    const resultsResponse = {
+      ...gamesResponse,
+      data: joiner.joinToGameResults(results),
+    }
+
+    return resultsResponse
   }
 
   async getGameResultsByCity(cityId: number): Promise<GameResult[]> {
@@ -546,6 +583,24 @@ export class CsvStorage implements Storage {
 
     const joiner = await this.getJoiner()
     return joiner.joinToGameResults(filteredResults)
+  }
+
+  async getMinimalGameResultsByTeam(teamId: string): Promise<MinimalGameResult[]> {
+    const allResults = await this.getRawGameResults()
+    const filteredResults = allResults.flatMap(
+      ({
+        team,
+        game: {
+          _id: game_id,
+          date: game_date,
+          series: { _id: game_series_id },
+          pack: { formatted: pack_formatted },
+        },
+        ...rest
+      }) => (team._id === teamId ? [{ ...rest, game_id, game_date, game_series_id, pack_formatted }] : [])
+    )
+
+    return filteredResults
   }
 
   async getMaxScoreByPack(seriesId: string, packNumber: string): Promise<number> {
@@ -589,12 +644,12 @@ export class CsvStorage implements Storage {
     return packsSeriesMap
   }
 
-  async getSeries(): Promise<Series[]> {
+  async getRawSeries(): Promise<BaseSeries[]> {
     return this.cache.series.get(
       () => this.readCsvFile('series.csv'),
       (records) =>
         records.map((record) =>
-          SeriesSchema.strip().parse({
+          BaseSeriesSchema.strip().parse({
             _id: record._id,
             name: record.name,
             slug: record.slug,
@@ -603,14 +658,37 @@ export class CsvStorage implements Storage {
     )
   }
 
-  async getSeriesById(id: string): Promise<Series | null> {
-    const series = await this.getSeries()
-    return series.find((s) => s._id === id) || null
+  async getSeries(): Promise<Series[]> {
+    const baseSeries = await this.getRawSeries()
+
+    const joiner = await this.getJoiner()
+    const joinedSeries = joiner.joinToSeries(baseSeries)
+
+    return joinedSeries
+  }
+
+  async getSeriesById(id: string): Promise<Series | null>
+  async getSeriesById(id: string[]): Promise<Series[]>
+  async getSeriesById(id: string | string[]): Promise<Series | null | Series[]> {
+    if (Array.isArray(id))
+      return Promise.all(id.map((id) => this.getSeriesById(id))).then((results) =>
+        results.filter((res) => res !== null)
+      )
+
+    const rawSeries = await this.getRawSeries()
+
+    const series = rawSeries.find((s) => s._id === id) || null
+    const joiner = await this.getJoiner()
+
+    return series !== null ? joiner.joinToSeries(series) : null
   }
 
   async getSeriesBySlug(slug: string): Promise<Series | null> {
-    const series = await this.getSeries()
-    return series.find((s) => s.slug === slug) || null
+    const rawSeries = await this.getRawSeries()
+    const series = rawSeries.find((s) => s.slug === slug) || null
+
+    const joiner = await this.getJoiner()
+    return series !== null ? joiner.joinToSeries(series) : null
   }
 
   async getTeams(params?: QueryParams & { cityId?: number }): Promise<TeamsResponse> {

@@ -1,12 +1,13 @@
 import { Link } from '@remix-run/react'
 import { RemixLinkProps } from '@remix-run/react/dist/components'
 import { ColumnDef, Row } from '@tanstack/react-table'
-import React from 'react'
+import React, { lazy } from 'react'
+import { useTeamResults } from '~/hooks/useTeamResults'
 import { cn } from '~/lib/utils'
-import { City } from '~/schemas/city'
-import type { GameResult } from '~/schemas/gameResult'
+import type { GameResult, GameResultsResponse } from '~/schemas/gameResult'
+import { Team } from '~/schemas/team'
 import { ComplexityGrade } from './ComplexityGrade'
-import { DataTable } from './ui/data-table'
+import { InfiniteDataTable } from './ui/infinite-data-table'
 import { TableWrapper } from './ui/table-wrapper'
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
 
@@ -15,18 +16,20 @@ const LinkCell = ({
   linkTo,
   children,
   className,
+  hasNestedLink = false,
   ...props
 }: {
   children: React.ReactNode
   className?: string
+  hasNestedLink?: boolean
 } & ({ row: Row<GameResult>; linkTo?: never } | { row?: never; linkTo: string }) &
   Partial<RemixLinkProps>) => {
   const to = linkTo ?? `/${row.original.game.city.slug}/game/${row.original.game._id}`
 
   // Check if children contain a Link component
-  const hasNestedLink = React.Children.toArray(children).some(
-    (child) => React.isValidElement(child) && child.type === Link
-  )
+  // const hasNestedLink = React.Children.toArray(children).some(
+  //   (child) => React.isValidElement(child) && child.type === Link
+  // )
 
   if (hasNestedLink) {
     return (
@@ -56,13 +59,13 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
   {
     accessorKey: 'game.series.name',
     header: columnHeaders['series.name'],
-    size: 300,
+    size: 200,
     cell: ({ row }) => {
       return (
-        <LinkCell row={row} tabIndex={-1}>
+        <LinkCell hasNestedLink row={row} tabIndex={-1}>
           <Link
             className="hover:text-muted-foreground hover:underline decoration-dotted"
-            to={`/${row.original.game.city.slug}/games?q=${row.original.game.series.name}`}
+            to={`?s=${row.original.game.series.slug}`}
           >
             {row.original.game.series.name}
           </Link>
@@ -77,7 +80,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
     cell: ({ row }) => {
       const { city, series, pack } = row.original.game
       return (
-        <LinkCell row={row} tabIndex={-1}>
+        <LinkCell hasNestedLink row={row} tabIndex={-1}>
           <Link className="group hover:text-inherit" to={`/${city.slug}/pack/${series.slug}/${pack.number}`}>
             <span className="group-hover:text-muted-foreground group-hover:underline decoration-dotted">{`#${pack.number}`}</span>
             <span>{`.${pack.replay_number}`}</span>
@@ -142,23 +145,23 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
       )
     },
   },
-  {
-    accessorKey: 'game.location',
-    header: columnHeaders['location'],
-    size: 150,
-    cell: ({ row }) => {
-      return (
-        <LinkCell row={row} tabIndex={-1}>
-          <Link
-            className="hover:text-muted-foreground hover:underline decoration-dotted"
-            to={`/${row.original.game.city.slug}/games?q=${row.original.game.location}`}
-          >
-            {row.original.game.location}
-          </Link>
-        </LinkCell>
-      )
-    },
-  },
+  // {
+  //   accessorKey: 'game.location',
+  //   header: columnHeaders['location'],
+  //   size: 150,
+  //   cell: ({ row }) => {
+  //     return (
+  //       <LinkCell hasNestedLink row={row} tabIndex={-1}>
+  //         <Link
+  //           className="hover:text-muted-foreground hover:underline decoration-dotted"
+  //           to={`/${row.original.game.city.slug}/games?q=${row.original.game.location}`}
+  //         >
+  //           {row.original.game.location}
+  //         </Link>
+  //       </LinkCell>
+  //     )
+  //   },
+  // },
   {
     accessorKey: 'sum',
     header: columnHeaders['sum'],
@@ -182,8 +185,9 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
     cell: ({ row }) => {
       const { city, series, pack } = row.original.game
       return (
-        <LinkCell row={row} tabIndex={-1}>
+        <LinkCell hasNestedLink row={row} tabIndex={-1}>
           <Link
+            prefetch="intent"
             className="hover:text-muted-foreground hover:underline decoration-dotted"
             to={`/${city.slug}/pack/${series.slug}/${pack.number}`}
           >
@@ -193,21 +197,70 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
       )
     },
   },
+  {
+    accessorKey: 'metrics.game_efficiency',
+    header: columnHeaders['efficiency'],
+    maxSize: 40,
+    cell: ({ row }) => (
+      <LinkCell row={row} tabIndex={-1}>
+        {`${(row.original.metrics.game_efficiency * 100).toFixed(1)}\u202f%`}
+      </LinkCell>
+    ),
+  },
 ]
 
-export function TeamResultsTable({
-  results,
-  columnHeaders,
-}: {
-  currentCity: City
-  results: GameResult[]
+export interface TeamResultsTableLabels {
   columnHeaders: Record<string, string>
+  noResults: string
+  endOfResults: string
+}
+
+export function TeamResultsTable({
+  initialResults,
+  team,
+  labels,
+  seriesId,
+}: {
+  initialResults: GameResultsResponse
+  team: Team
+  labels: TeamResultsTableLabels
+  seriesId: string | null
 }) {
-  const columns = createColumns(columnHeaders)
+  const columns = createColumns(labels.columnHeaders)
+  const currentCity = team.city
+
+  const {
+    data: flatData,
+    fetchNextPage,
+    hasNextPage,
+    isFetchingNextPage,
+    isLoading,
+    isError,
+    error,
+  } = useTeamResults(currentCity, initialResults, team._id, seriesId ?? '')
+
+  if (isError) {
+    return <div className="rounded-md border p-4 text-center text-sm text-muted-foreground">Error: {error.message}</div>
+  }
 
   return (
     <TableWrapper heightClassName="max-sm:max-h-[calc(100dvh-12rem)]">
-      <DataTable className="overflow-x-auto" columns={columns} data={results} extraClassNames={{ cell: 'p-0' }} />
+      <InfiniteDataTable
+        className="overflow-x-auto"
+        columns={columns}
+        data={flatData ?? []}
+        hasMore={Boolean(hasNextPage)}
+        isLoading={isFetchingNextPage}
+        isInitialLoading={isLoading}
+        onLoadMore={fetchNextPage}
+        extraClassNames={{ cell: 'p-0' }}
+        endOfResults={labels.endOfResults}
+        noResults={labels.noResults}
+      />
     </TableWrapper>
   )
 }
+
+export const TeamResultsTableLazy = lazy(() =>
+  import('./TeamResultsTable').then((module) => ({ default: module.TeamResultsTable }))
+)

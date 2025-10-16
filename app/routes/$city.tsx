@@ -20,7 +20,7 @@ type LoaderData =
   | { cities: City[]; currentCity: null; appName: string; error: string }
 
 export const loader = async ({ params }: LoaderFunctionArgs): Promise<LoaderData | Response> => {
-  const t = await i18next.getFixedT(params.locale ?? 'ru', ['games', 'common'])
+  const t = await i18next.getFixedT(params.locale ?? 'ru', ['common'])
 
   // Initialize with retries to handle startup timing issues
   let cities: City[] = []

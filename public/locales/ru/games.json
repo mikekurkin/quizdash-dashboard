@@ -12,13 +12,8 @@
     "location": "Место",
     "complexity": "Сложность"
   },
-  "endOfResults": "Иии... Это всё",
-  "noResults": "Игры не найдены",
   "search": {
     "label": "Поиск",
     "placeholder": "Поиск по играм"
-  },
-  "datePicker": {
-    "placeholder": "Выберите дату"
   }
 }

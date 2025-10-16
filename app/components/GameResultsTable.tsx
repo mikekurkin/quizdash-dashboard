@@ -27,6 +27,7 @@ export const createGameResultsColumns = (
         } = row.original
         return (
           <Link
+            prefetch="intent"
             className="hover:text-muted-foreground hover:underline decoration-dotted"
             to={`/${city.slug}/team/${team.slug}`}
           >

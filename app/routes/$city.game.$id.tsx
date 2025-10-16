@@ -1,12 +1,12 @@
 import { MetaFunction, type LoaderFunctionArgs } from '@remix-run/node'
 import { Link, useLoaderData } from '@remix-run/react'
+import { CompactGamesList } from '~/components/CompactGamesList'
 import { ComplexityGrade } from '~/components/ComplexityGrade'
+import { GameInfo } from '~/components/GameInfo'
 import { GameResultsTable } from '~/components/GameResultsTable'
 import Card from '~/components/ui/card'
 import i18next from '~/i18n/i18next.server'
 import { storage } from '~/services/storage.server'
-import { CompactGamesList } from '~/components/CompactGamesList'
-import { GameInfo } from '~/components/GameInfo'
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [{ title: data?.meta.title }, { name: 'description', content: data?.meta.description }]

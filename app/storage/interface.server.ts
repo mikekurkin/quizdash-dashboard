@@ -1,6 +1,6 @@
 import { City } from '~/schemas/city'
 import { Game, GamesResponse } from '~/schemas/game'
-import { GameResult } from '~/schemas/gameResult'
+import { GameResult, GameResultsResponse, MinimalGameResult } from '~/schemas/gameResult'
 import { Rank } from '~/schemas/rank'
 import { Series } from '~/schemas/series'
 import { Team, TeamsResponse } from '~/schemas/team'
@@ -14,7 +14,19 @@ export type GetGamesParams = {
   teamId?: string
   seriesId?: string
   packNumber?: string
-} & ({ cityId?: number; citySlug?: never } | { cityId?: never; citySlug?: string })
+} & ({ seriesId?: string; seriesSlug?: never } | { seriesId?: never; seriesSlug?: string }) &
+  ({ cityId?: number; citySlug?: never } | { cityId?: never; citySlug?: string })
+
+export type FindTeamResultsParams = {
+  teamId: string
+  limit?: number
+  cursor?: number
+  search?: string
+  dateFrom?: string
+  dateTo?: string
+  packNumber?: string
+} & ({ seriesId?: string; seriesSlug?: never } | { seriesId?: never; seriesSlug?: string }) &
+  ({ cityId?: number; citySlug?: never } | { cityId?: never; citySlug?: string })
 
 export interface Storage {
   // City operations
@@ -30,12 +42,14 @@ export interface Storage {
   getGamesByPack(seriesId: string, packNumber: string): Promise<Game[]>
 
   // Result operations
-  getGameResults(gameId: number): Promise<GameResult[]>
+  getGameResults(gameId: number | number[]): Promise<GameResult[]>
   getTeamResults(teamId: string): Promise<GameResult[]>
   getGameResultsByPack(seriesId: string, packNumber: string): Promise<GameResult[]>
   getGameResultsByCity(cityId: number): Promise<GameResult[]>
   getGameResultsByTeam(teamId: string): Promise<GameResult[]>
+  getMinimalGameResultsByTeam(teamId: string): Promise<MinimalGameResult[]>
   getMaxScoreByPack(seriesId: string, packNumber: string): Promise<number>
+  findTeamResults(params: FindTeamResultsParams): Promise<GameResultsResponse>
 
   // Team operations
   getTeams(): Promise<TeamsResponse>
@@ -44,6 +58,7 @@ export interface Storage {
   // Series operations
   getSeries(): Promise<Series[]>
   getSeriesById(id: string): Promise<Series | null>
+  getSeriesById(id: string[]): Promise<Series[]>
   getSeriesBySlug(slug: string): Promise<Series | null>
 
   // Rank operations

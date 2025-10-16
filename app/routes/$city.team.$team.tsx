@@ -1,16 +1,17 @@
 import type { MetaFunction } from '@remix-run/node'
 import { LoaderFunctionArgs } from '@remix-run/node'
-import { useLoaderData, useOutletContext } from '@remix-run/react'
-import { TeamResultsTable } from '~/components/TeamResultsTable'
+import { useLoaderData } from '@remix-run/react'
+import { TeamPerformanceDashboard } from '~/components/TeamPerformanceDashboard'
+import { RESULTS_PER_PAGE } from '~/hooks/useTeamResults'
 import i18next from '~/i18n/i18next.server'
+import { filterAndSortSeries } from '~/lib/utils'
 import { storage } from '~/services/storage.server'
-import { CityContext } from './$city'
 
 export const meta: MetaFunction<typeof loader> = ({ data }) => {
   return [{ title: data?.meta.title }, { name: 'description', content: data?.meta.description }]
 }
 
-export const handle = { i18n: 'games' }
+export const handle = { i18n: 'team' }
 
 export async function loader({ params, request }: LoaderFunctionArgs) {
   const t = await i18next.getFixedT(params.locale ?? 'ru', ['team', 'common'])
@@ -19,7 +20,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 
   const searchParams = {
     citySlug: params.city!,
-    search: url.searchParams.get('q') || undefined,
+    seriesSlug: url.searchParams.get('s') || undefined,
     dateFrom: url.searchParams.get('from') || undefined,
     dateTo: url.searchParams.get('to') || undefined,
   }
@@ -29,34 +30,51 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     throw new Response('Team not found', { status: 404 })
   }
 
-  const results = (await storage.getGameResultsByTeam(team._id)).sort(
-    (a, b) => new Date(b.game.date).getTime() - new Date(a.game.date).getTime()
-  )
-  // const games = await storage.getGamesByTeam({
-  //   teamId: team._id,
-  //   ...searchParams,
-  //   limit: GAMES_PER_PAGE,
-  // })
+  const queryDate =
+    !searchParams.dateFrom && !searchParams.dateTo
+      ? null
+      : {
+          from: searchParams.dateFrom ? new Date(searchParams.dateFrom) : undefined,
+          to: searchParams.dateTo ? new Date(searchParams.dateTo) : undefined,
+        }
 
-  const columnHeaders = {
-    _id: t('columnHeaders.gameId'),
-    'series.name': t('columnHeaders.series'),
-    sum: t('columnHeaders.sum'),
-    place: t('columnHeaders.place'),
-    pack_place: t('columnHeaders.pack_place'),
-    number: t('columnHeaders.gameNumber'),
-    complexity: t('columnHeaders.complexity'),
-    date: t('columnHeaders.date'),
-    location: t('columnHeaders.location'),
-  }
+  const resultsPromise = storage
+    .getMinimalGameResultsByTeam(team._id)
+    .then((results) => results.sort((a, b) => new Date(b.game_date).getTime() - new Date(a.game_date).getTime()))
+
+  const seriesPromise = resultsPromise.then((results) =>
+    storage.getSeriesById(Array.from(new Set(results.map((res) => res.game_series_id))))
+  )
+
+  const dashboard = t('dashboard', { returnObjects: true })
+  const selectedSeriesIdPromise = searchParams.seriesSlug
+    ? searchParams.seriesSlug === 'all'
+      ? Promise.resolve(null)
+      : seriesPromise.then((series) => series.find((s) => s.slug === searchParams.seriesSlug)?._id ?? null)
+    : Promise.all([resultsPromise, seriesPromise]).then(
+        ([results, series]) => filterAndSortSeries(results, series, null).sortedSeries[0].series?._id ?? null
+      )
+
+  const resultsForTablePromise = selectedSeriesIdPromise.then((seriesId) => {
+    const { seriesSlug, ...rest } = searchParams
+    const slugOrId = (seriesSlug && seriesSlug === 'all') || !seriesId ? {} : { seriesId }
+
+    return storage.findTeamResults({
+      teamId: team._id,
+      ...rest,
+      limit: RESULTS_PER_PAGE,
+      ...slugOrId,
+    })
+  })
 
   return {
-    t: {
-      title: t('title', { teamTitle: team.name }),
-      columnHeaders,
-    },
+    t: { dashboard },
     searchParams,
-    results,
+    results: await resultsPromise,
+    series: await seriesPromise,
+    resultsForTable: await resultsForTablePromise,
+    selectedSeriesId: await selectedSeriesIdPromise,
+    queryDate,
     team,
     meta: {
       title: t('meta.title', { teamTitle: team.name }),
@@ -66,24 +84,17 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
 }
 
 export default function GamesRoute() {
-  const { t, results } = useLoaderData<typeof loader>()
-  const { currentCity } = useOutletContext<CityContext>()
+  const { t, results, series, selectedSeriesId, team, resultsForTable, queryDate } = useLoaderData<typeof loader>()
 
   return (
-    <div>
-      <div className="flex flex-col gap-6 sm:flex-row sm:items-center sm:justify-between my-6 mx-4 md:mx-0">
-        <h1 className="text-2xl font-bold">{t.title}</h1>
-        {/* <SearchForm
-          query={searchParams.search}
-          fromDate={searchParams.dateFrom}
-          toDate={searchParams.dateTo}
-          label={t.searchLabel}
-          searchPlaceholder={t.searchPlaceholder}
-          selectDatePlaceholder={t.selectDatePlaceholder}
-          className="w-full sm:w-[300px] md:w-[400px]"
-        /> */}
-      </div>
-      <TeamResultsTable currentCity={currentCity} results={results} columnHeaders={t.columnHeaders} />
-    </div>
+    <TeamPerformanceDashboard
+      team={team}
+      results={results}
+      series={series}
+      selectedDate={queryDate}
+      resultsForTable={resultsForTable}
+      selectedSeriesId={selectedSeriesId}
+      labels={t.dashboard}
+    />
   )
 }

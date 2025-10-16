@@ -4,6 +4,7 @@ import { defaultGameMetrics } from '~/schemas/game'
 import type { BaseGameResult, GameResult } from '~/schemas/gameResult'
 import { defaultGameResultMetrics } from '~/schemas/gameResult'
 import { defaultPackMetrics } from '~/schemas/pack'
+import { BaseSeries, Series } from '~/schemas/series'
 
 export class DerivedDataJoiner {
   constructor(private derivedData: DerivedData) {}
@@ -26,6 +27,13 @@ export class DerivedDataJoiner {
     return this.joinToGameResult(results) as T extends BaseGameResult[] ? GameResult[] : GameResult
   }
 
+  joinToSeries<T extends BaseSeries | BaseSeries[]>(series: T): T extends BaseSeries[] ? Series[] : Series {
+    if (Array.isArray(series)) {
+      return series.map((s) => this.joinToSerie(s)) as T extends BaseSeries[] ? Series[] : Series
+    }
+    return this.joinToSerie(series) as T extends BaseSeries[] ? Series[] : Series
+  }
+
   private joinToGame(game: BaseGame): Game {
     return {
       ...game,
@@ -33,6 +41,10 @@ export class DerivedDataJoiner {
       pack: {
         ...game.pack,
         metrics: this.derivedData.packs[game.pack._id] ?? defaultPackMetrics,
+      },
+      series: {
+        ...game.series,
+        ...this.derivedData.series[game.series._id],
       },
     }
   }
@@ -48,7 +60,20 @@ export class DerivedDataJoiner {
           ...result.game.pack,
           metrics: this.derivedData.packs[result.game.pack._id] ?? defaultPackMetrics,
         },
+        series: {
+          ...result.game.series,
+          ...this.derivedData.series[result.game.series._id],
+        },
       },
+    }
+  }
+
+  private joinToSerie(series: BaseSeries): Series {
+    // const maxSum = this.derivedData.series[series._id] ?? 0
+
+    return {
+      ...series,
+      ...this.derivedData.series[series._id],
     }
   }
 }

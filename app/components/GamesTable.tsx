@@ -63,7 +63,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<Game>[]
         <LinkCell row={row} tabIndex={-1}>
           <Link
             className="hover:text-muted-foreground hover:underline decoration-dotted"
-            to={`/${row.original.city.slug}/games?q=${row.original.series.name}`}
+            to={`?q=${row.original.series.name}`}
           >
             {row.original.series.name}
           </Link>
@@ -79,7 +79,11 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<Game>[]
       const { city, series, pack } = row.original
       return (
         <LinkCell row={row} tabIndex={-1}>
-          <Link className="group hover:text-inherit" to={`/${city.slug}/pack/${series.slug}/${pack.number}`}>
+          <Link
+            className="group hover:text-inherit"
+            prefetch="intent"
+            to={`/${city.slug}/pack/${series.slug}/${pack.number}`}
+          >
             <span className="group-hover:text-muted-foreground group-hover:underline decoration-dotted">{`#${pack.number}`}</span>
             <span>{`.${pack.replay_number}`}</span>
           </Link>

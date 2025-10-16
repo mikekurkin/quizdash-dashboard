@@ -11,7 +11,7 @@ export function useGames(currentCity: City, initialData: GamesResponse) {
   const initialGames = GamesResponseSchema.strip().parse(initialData)
 
   return useInfiniteQuery<GamesResponse, Error, Game[]>({
-    queryKey: ['games', currentCity, searchParams.toString()],
+    queryKey: ['games-list', currentCity, searchParams.toString()],
     queryFn: async ({ pageParam = 0 }) => {
       const params = new URLSearchParams(searchParams)
       params.set('city', currentCity?.slug ?? '')

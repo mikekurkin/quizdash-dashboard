@@ -3,36 +3,68 @@
     "title": "$t(common:appName): {{teamTitle}}",
     "description": "Результаты прошедших игр команды {{teamTitle}}"
   },
-  "title": "Команда: {{teamTitle}}",
-  "columnHeaders": {
-    "place": "# в игре",
-    "pack_place": "# в паке",
-    "team": "Команда",
-    "sum": "Сумма",
-    "efficiency": "Эффективность",
-    "gameId": "ID",
-    "series": "Серия",
-    "gameNumber": "Пакет",
-    "date": "Дата",
-    "location": "Место",
-    "complexity": "Сложность"
-  },
-  "complexityLabels": {
-    "sumComplexity": "Cложность пакета",
-    "roundsComplexity": "По раундам",
-    "roundComplexityTooltip": "Раунд",
-    "sumTopNAvg": "Средний балл топ-{{n}} команд",
-    "roundTopNAvg": "Средний топ-{{n}}"
-  },
-  "infoLabels": {
-    "date": "Когда",
-    "location": "Где",
-    "teams_one": "{{teamsCount}} команда",
-    "teams_few": "{{teamsCount}} команды",
-    "teams_many": "{{teamsCount}} команд",
-    "games_one": "{{gamesCount}} игра",
-    "games_few": "{{gamesCount}} игры",
-    "games_many": "{{gamesCount}} игр"
-  },
-  "otherPackGames": "Другие игры пакета"
+  "dashboard": {
+    "info": {
+      "datePickerPlaceholder": "$t(common:datePicker.placeholder)",
+      "gamesCount": "Количество игр",
+      "avgResult": "Средний результат",
+      "avgPlace": "Среднее место",
+      "bestResult": "Лучший результат",
+      "atAll": "По всем играм",
+      "inSeries": "В серии"
+    },
+    "series": {
+      "title": "Серии игр",
+      "more": "Ещё...",
+      "rest": "Остальные",
+      "all": "Все",
+      "games_all": "игры",
+      "games_one": "игра",
+      "games_few": "игры",
+      "games_many": "игр"
+    },
+    "timeline": {
+      "title": "Временная шкала",
+      "description": "График показывает динамику результатов команды во времени. Отображает сумму баллов и место команды по датам игр, с плавными линиями трендов для лучшего понимания общей тенденции результатов.",
+      "tooltip": {
+        "sum": "Сумма баллов",
+        "sum_lowess": "Тренд",
+        "place": "Место",
+        "place_lowess": "Тренд",
+        "date": "Дата"
+      }
+    },
+    "kde":{
+      "title": "Распределение результатов",
+      "description": "Визуализирует распределение результатов команды. График показывает, сколько баллов команда получает чаще всего и как распределяются места команды, помогая понять типичные результаты и стабильность игры.",
+      "tooltip": {
+        "sum": "Сумма баллов",
+        "place": "Место"
+      }
+    },
+    "rounds":{
+      "title": "Результаты по раундам",
+      "description": "Сравнивает средние баллы команды по раундам в играх выбранной серии с максимально возможными.",
+      "tooltip": {
+        "max": "Максимальный",
+        "average": "Средний"
+      }
+    },
+    "table": {
+      "endOfResults": "$t(common:endOfResults)",
+      "noResults": "$t(common:noResults)",
+      "columnHeaders": {
+        "_id": "ID",
+        "series.name": "Серия",
+        "number": "Пакет",
+        "complexity": "Сложность",
+        "date": "Дата",
+        "location": "Место",
+        "sum": "Сумма",
+        "place": "# в игре",
+        "pack_place": "# в паке",
+        "efficiency": "Эфф."
+      }
+    }
+  }
 }

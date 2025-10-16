@@ -5,15 +5,20 @@ import type { PackMetrics } from '~/schemas/pack'
 
 export class MetricsCalculator {
   calculateMetrics(results: BaseGameResult[]): DerivedData {
+    console.log('try to get derived data')
     const resultsDD = this.calculateResultsMetrics(results)
     const packsDD = this.calculatePacksMetrics(results)
+    console.log('try to get series data')
+    const seriesDD = this.calculateSeriesMetrics(results)
     const gamesDD = this.calculateGamesMetrics(results)
+    console.log('success')
 
     return {
       results: resultsDD,
       games: gamesDD,
       packs: packsDD,
       teams: {},
+      series: seriesDD,
     }
   }
 
@@ -43,6 +48,19 @@ export class MetricsCalculator {
     return map
   }
 
+  private groupResultsBySeries(results: BaseGameResult[]) {
+    const map = new Map<string, BaseGameResult[]>()
+    for (const result of results) {
+      const packResults = map.get(result.game.series._id)
+      if (packResults) {
+        packResults.push(result)
+      } else {
+        map.set(result.game.series._id, [result])
+      }
+    }
+    return map
+  }
+
   private groupResultsBySeriesAndPack(results: BaseGameResult[]) {
     const seriesMap = new Map<string, Map<string, BaseGameResult[]>>()
 
@@ -66,6 +84,59 @@ export class MetricsCalculator {
     }
 
     return seriesMap
+  }
+
+  private calculateSeriesMetrics(results: BaseGameResult[]) {
+    const seriesResultsMap = this.groupResultsBySeries(results)
+
+    const maxSums = new Map<string, number>()
+    const maxSumIds = new Map<string, string | null>()
+    const roundCounts = new Map<string, number>()
+    const maxRoundSums = new Map<string, number[]>()
+    const maxRoundSumIds = new Map<string, number[]>()
+
+    for (const [seriesId, results] of seriesResultsMap) {
+
+      const sortedResults = results.sort((a, b) => b.sum - a.sum)
+      maxSums.set(seriesId, sortedResults.at(0)?.sum ?? 0)
+      maxSumIds.set(seriesId, sortedResults.at(0)?._id ?? null)
+    }
+
+    for (const [seriesId, results] of seriesResultsMap) {
+      const sortedResults = results.sort((a, b) => b.rounds.length - a.rounds.length)
+      const seriesRoundSums: number[] = []
+      const seriesRoundSumIds: number[] = []
+      const seriesRounds = sortedResults.at(0)?.rounds.length ?? 0
+
+      roundCounts.set(seriesId, seriesRounds)
+
+      for (let roundIndex = 0; roundIndex < seriesRounds; roundIndex++) {
+        const roundSums = results.map((result) => result.rounds[roundIndex] ?? 0)
+        const sortedResults = results.sort((a, b) => b.rounds[roundIndex] - a.rounds[roundIndex])
+        const maxRoundSum = roundSums.length > 0 ? sortedResults.at(0)?.rounds[roundIndex] : 0
+        const maxRoundId = sortedResults.at(0)?.game._id
+        seriesRoundSums.push(maxRoundSum ?? 0)
+        if (maxRoundId !== undefined) seriesRoundSumIds.push(maxRoundId)
+      }
+
+      maxRoundSums.set(seriesId, seriesRoundSums)
+      maxRoundSumIds.set(seriesId, seriesRoundSumIds)
+    }
+
+    return Object.fromEntries(
+      Array.from(maxSums.entries()).map(([id, maxSum]) => {
+        return [
+          id,
+          {
+            maxSum: maxSum,
+            maxSumId: maxSumIds.get(id) ?? null,
+            roundsCount: roundCounts.get(id) ?? 0,
+            maxRoundSums: maxRoundSums.get(id) ?? [],
+            maxRoundSumIds: maxRoundSumIds.get(id) ?? [],
+          },
+        ]
+      })
+    )
   }
 
   private calculateResultsMetrics(results: BaseGameResult[]) {
