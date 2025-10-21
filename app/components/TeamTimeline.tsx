@@ -237,7 +237,7 @@ export const TeamTimeline = memo(function TeamTimeline({
       </CardHeader>
       <CardContent className="px-0 mx-0 py-0 pt-4">
         <ChartContainer config={chartConfig} className="aspect-auto h-[250px] w-full" debounce={150}>
-          <ComposedChart data={dataWithLowess}>
+          <ComposedChart data={dataWithLowess} throttleDelay={results.length >= 300 ? 100 : 0}>
             <CartesianGrid vertical={false} />
 
             <XAxis {...xAxisConfig} dataKey="date" />
@@ -273,6 +273,7 @@ export const TeamTimeline = memo(function TeamTimeline({
                   valueFormatter={tooltipValueFormatter}
                 />
               }
+              // isAnimationActive={results.length <= 500}
             />
           </ComposedChart>
         </ChartContainer>
