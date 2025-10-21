@@ -11,13 +11,15 @@ export function cn(...inputs: ClassValue[]) {
 }
 
 export const compareRounds = (aRounds: number[], bRounds: number[]) => {
-  return aRounds.reduceRight((acc, roundA, index) => {
-    const roundB = bRounds[bRounds.length - 1 - index] || 0
+  for (let i = aRounds.length - 1; i >= 0; i--) {
+    const roundA = aRounds[i] ?? 0
+    const roundB = bRounds[i] ?? 0
+    console.log('comparing', i, [roundA, roundB])
     if (roundA !== roundB) {
       return roundB - roundA
     }
-    return acc
-  }, 0)
+  }
+  return 0
 }
 
 type SmoothingData = { date: number } & Record<string, unknown>
