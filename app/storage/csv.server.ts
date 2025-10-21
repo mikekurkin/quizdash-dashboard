@@ -348,7 +348,7 @@ export class CsvStorage implements Storage {
                 }
 
                 const parsed = BaseGameSchema.parse(game)
-                parsedGames.push(parsed)
+                if (!game.is_stream) parsedGames.push(parsed)
                 _batchParsed++
               } catch (e) {
                 console.error('Failed to parse game:', e, 'Record:', record)
