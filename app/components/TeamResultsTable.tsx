@@ -198,12 +198,12 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
     },
   },
   {
-    accessorKey: 'metrics.game_efficiency',
+    accessorKey: 'metrics.pack_efficiency',
     header: columnHeaders['efficiency'],
     maxSize: 40,
     cell: ({ row }) => (
       <LinkCell row={row} tabIndex={-1}>
-        {`${(row.original.metrics.game_efficiency * 100).toFixed(1)}\u202f%`}
+        {`${(row.original.metrics.pack_efficiency * 100).toFixed(1)}\u202f%`}
       </LinkCell>
     ),
   },
