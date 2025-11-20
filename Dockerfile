@@ -50,6 +50,8 @@ COPY --from=builder --chown=nodejs:nodejs /app/public /app/public
 COPY --from=builder --chown=nodejs:nodejs /app/package.json /app/package.json
 COPY --from=builder --chown=nodejs:nodejs /app/remix.config.js /app/remix.config.js
 
+COPY --from=builder --chown=nodejs:nodejs /app/scripts /app/scripts
+
 # Switch to non-root user
 USER nodejs
 
@@ -57,7 +59,7 @@ USER nodejs
 EXPOSE 3000
 
 # Use tini as init to handle signals properly
-ENTRYPOINT ["/sbin/tini", "--", "/scripts/maxmind-init.sh"]
+ENTRYPOINT ["/sbin/tini", "--", "/app/scripts/maxmind-init.sh"]
 
 # Start the server
 CMD ["npm", "run", "start"]
