@@ -9,6 +9,9 @@ services:
 
     environment:
       - NODE_ENV=production
+      - MAXMIND_ACCOUNT_ID=${MAXMIND_ACCOUNT_ID}
+      - MAXMIND_LICENSE_KEY=${MAXMIND_LICENSE_KEY}
+      - MAXMIND_DB_PATH=${MAXMIND_DB_PATH:-/app/data/geoip/GeoLite2-City.mmdb}
       - GITHUB_OWNER=${GITHUB_OWNER}
       - GITHUB_REPO=${GITHUB_REPO}
       - GITHUB_BRANCH=${GITHUB_BRANCH:-main}

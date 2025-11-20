@@ -57,7 +57,7 @@ USER nodejs
 EXPOSE 3000
 
 # Use tini as init to handle signals properly
-ENTRYPOINT ["/sbin/tini", "--"]
+ENTRYPOINT ["/sbin/tini", "--", "/scripts/maxmind-init.sh"]
 
 # Start the server
 CMD ["npm", "run", "start"]

@@ -17,6 +17,7 @@
     "format": "prettier --write ."
   },
   "dependencies": {
+    "@maxmind/geoip2-node": "6.2.0",
     "@octokit/plugin-retry": "7.2.1",
     "@octokit/plugin-throttling": "10.0.0",
     "@octokit/rest": "21.1.1",
@@ -44,6 +45,7 @@
     "i18next-browser-languagedetector": "8.0.0",
     "i18next-fs-backend": "2.3.2",
     "i18next-http-backend": "2.6.2",
+    "is-ip": "5.0.1",
     "isbot": "^4.1.0",
     "lucide-react": "0.456.0",
     "react": "^18.2.0",
@@ -53,6 +55,7 @@
     "recharts": "2.15.4",
     "remix-i18next": "6.4.1",
     "remix-themes": "1.5.1",
+    "remix-utils": "7.0.0-pre.7",
     "simple-statistics": "7.8.8",
     "tailwind-merge": "2.5.4",
     "tailwindcss-animate": "1.0.7",

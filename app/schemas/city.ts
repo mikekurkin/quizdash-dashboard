@@ -5,6 +5,8 @@ export const CitySchema = z.object({
   name: z.string(),
   slug: z.string(),
   timezone: z.string(),
+  latitude: z.number().optional(),
+  longitude: z.number().optional(),
 })
 
 export type City = z.infer<typeof CitySchema>

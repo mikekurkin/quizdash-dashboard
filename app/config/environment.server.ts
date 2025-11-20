@@ -15,12 +15,15 @@ export interface DataSourceConfig {
     token?: string
     path: string
   }
+  maxMindDbPath?: string
 }
 
 export function getDataSourceConfig(): DataSourceConfig {
   // Default to local data directory
   const dataSourceType = process.env.DATA_SOURCE_TYPE || 'local'
   const localDataDir = process.env.LOCAL_DATA_DIR || 'data'
+
+  const maxMindDbPath = process.env.MAXMIND_DB_PATH
 
   // Create config object based on data source type
   if (dataSourceType === 'github') {
@@ -49,6 +52,7 @@ export function getDataSourceConfig(): DataSourceConfig {
         token,
         path,
       },
+      maxMindDbPath,
     }
   }
 
@@ -56,5 +60,6 @@ export function getDataSourceConfig(): DataSourceConfig {
   return {
     type: 'local',
     dataDir: localDataDir,
+    maxMindDbPath,
   }
 }

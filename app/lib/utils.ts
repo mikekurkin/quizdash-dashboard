@@ -14,7 +14,7 @@ export const compareRounds = (aRounds: number[], bRounds: number[]) => {
   for (let i = aRounds.length - 1; i >= 0; i--) {
     const roundA = aRounds[i] ?? 0
     const roundB = bRounds[i] ?? 0
-    console.log('comparing', i, [roundA, roundB])
+
     if (roundA !== roundB) {
       return roundB - roundA
     }
@@ -115,4 +115,41 @@ export const filterAndSortSeries = (results: MinimalGameResult[], series: Series
   ].sort((a, b) => b.count - a.count)
 
   return { filtered, sortedSeries }
+}
+
+// source: https://stackoverflow.com/a/63013747
+
+interface CoordinatePair {
+  latitude: number
+  longitude: number
+}
+
+const haversine = (
+  { longitude: lonA, latitude: latA }: CoordinatePair,
+  { longitude: lonB, latitude: latB }: CoordinatePair
+): number => {
+  const { PI, sin, cos, atan2 } = Math,
+    r = PI / 180,
+    R = 6371,
+    deltaLat = (latB - latA) * r,
+    deltaLon = (lonB - lonA) * r,
+    a = sin(deltaLat / 2) ** 2 + cos(cos(latB * r) * latA * r) * sin(deltaLon / 2) ** 2,
+    c = 2 * atan2(a ** 0.5, (1 - a) ** 0.5),
+    d = R * c
+  return d
+}
+
+export const nearestNeighbor = <T extends CoordinatePair, U extends CoordinatePair>(obj: T, arr: U[]) => {
+  const { closest } = arr.reduce<{ closest: U | null; minDistance: number | null }>(
+    (r, o) => {
+      const distance = haversine(o, obj)
+      if (r.minDistance === null || distance < r.minDistance) {
+        r.closest = o
+        r.minDistance = distance
+      }
+      return r
+    },
+    { closest: null, minDistance: null }
+  )
+  return closest
 }

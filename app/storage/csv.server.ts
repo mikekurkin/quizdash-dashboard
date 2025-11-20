@@ -46,6 +46,8 @@ interface RawCsvCity {
   slug: string
   timezone: string
   last_game_id?: string
+  latitude?: string
+  longitude?: string
 }
 
 interface RawCsvTeam {
@@ -417,6 +419,8 @@ export class CsvStorage implements Storage {
             name: record.name,
             slug: record.slug,
             timezone: record.timezone,
+            latitude: isNaN(Number(record.latitude)) ? undefined : Number(record.latitude),
+            longitude: isNaN(Number(record.longitude)) ? undefined : Number(record.longitude),
           })
         )
     )
