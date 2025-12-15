@@ -32,7 +32,7 @@ export const BaseGameResultSchema = z.object({
 
 export const MinimalGameResultSchema = z.object({
   _id: z.string(),
-  game_id: z.number(),
+  game_id: z.string(),
   game_date: z.union([z.date(), z.string().transform((s) => new Date(s))]),
   game_series_id: z.string().uuid(),
   pack_formatted: z.string(),

@@ -15,7 +15,7 @@ export const GameMetricsSchema = z
   .default(defaultGameMetrics)
 
 export const BaseGameSchema = z.object({
-  _id: z.number(),
+  _id: z.string(),
   city: CitySchema,
   series: BaseSeriesSchema,
   pack: BasePackSchema,

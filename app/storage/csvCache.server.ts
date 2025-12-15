@@ -38,7 +38,7 @@ export class CsvCache<T, R> {
   /**
    * Waits for the file to exist with retries
    */
-  private async waitForFile(maxRetries = 30, retryDelayMs = 500): Promise<boolean> {
+  private async waitForFile(maxRetries = 60, retryDelayMs = 700): Promise<boolean> {
     if (this.fileExists()) {
       return true
     }

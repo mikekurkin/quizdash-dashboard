@@ -6,7 +6,7 @@ import { SeriesMetricsSchema } from './series'
 
 export const derivedData = z.object({
   results: z.record(z.string(), GameResultMetricsSchema),
-  games: z.record(z.number(), GameMetricsSchema),
+  games: z.record(z.string(), GameMetricsSchema),
   packs: z.record(z.string(), PackMetricsSchema),
   teams: z.record(z.string(), z.object({})),
   series: z.record(z.string(), SeriesMetricsSchema),

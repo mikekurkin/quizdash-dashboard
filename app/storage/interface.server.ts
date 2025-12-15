@@ -37,12 +37,12 @@ export interface Storage {
 
   // Game operations
   getGames(params?: GetGamesParams): Promise<GamesResponse>
-  getGameById(id: number): Promise<Game | null>
+  getGameById(id: string): Promise<Game | null>
   getGamesByTeam(params: GetGamesParams): Promise<GamesResponse>
   getGamesByPack(seriesId: string, packNumber: string): Promise<Game[]>
 
   // Result operations
-  getGameResults(gameId: number | number[]): Promise<GameResult[]>
+  getGameResults(gameId: string | string[]): Promise<GameResult[]>
   getTeamResults(teamId: string): Promise<GameResult[]>
   getGameResultsByPack(seriesId: string, packNumber: string): Promise<GameResult[]>
   getGameResultsByCity(cityId: number): Promise<GameResult[]>

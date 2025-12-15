@@ -23,7 +23,7 @@ export class MetricsCalculator {
   }
 
   private groupResultsByGame(results: BaseGameResult[]) {
-    const map = new Map<number, BaseGameResult[]>()
+    const map = new Map<string, BaseGameResult[]>()
     for (const result of results) {
       const gameResults = map.get(result.game._id)
       if (gameResults) {
@@ -93,10 +93,9 @@ export class MetricsCalculator {
     const maxSumIds = new Map<string, string | null>()
     const roundCounts = new Map<string, number>()
     const maxRoundSums = new Map<string, number[]>()
-    const maxRoundSumIds = new Map<string, number[]>()
+    const maxRoundSumIds = new Map<string, string[]>()
 
     for (const [seriesId, results] of seriesResultsMap) {
-
       const sortedResults = results.sort((a, b) => b.sum - a.sum)
       maxSums.set(seriesId, sortedResults.at(0)?.sum ?? 0)
       maxSumIds.set(seriesId, sortedResults.at(0)?._id ?? null)
@@ -105,7 +104,7 @@ export class MetricsCalculator {
     for (const [seriesId, results] of seriesResultsMap) {
       const sortedResults = results.sort((a, b) => b.rounds.length - a.rounds.length)
       const seriesRoundSums: number[] = []
-      const seriesRoundSumIds: number[] = []
+      const seriesRoundSumIds: string[] = []
       const seriesRounds = sortedResults.at(0)?.rounds.length ?? 0
 
       roundCounts.set(seriesId, seriesRounds)
@@ -144,7 +143,7 @@ export class MetricsCalculator {
     const packResultsMap = this.groupResultsByPack(results)
 
     const maxSums = {
-      games: new Map<number, number>(),
+      games: new Map<string, number>(),
       packs: new Map<string, number>(),
     }
 

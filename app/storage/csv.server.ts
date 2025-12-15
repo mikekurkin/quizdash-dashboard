@@ -333,7 +333,7 @@ export class CsvStorage implements Storage {
 
                 // Create game object matching schema
                 const game = {
-                  _id: parseInt(record._id),
+                  _id: record._id,
                   city, // Use full city object
                   series: serie, // Use full series object
                   pack: {
@@ -510,7 +510,7 @@ export class CsvStorage implements Storage {
     }
   }
 
-  async getGameById(id: number): Promise<Game | null> {
+  async getGameById(id: string): Promise<Game | null> {
     const games = await this.getRawGames()
     const game = games.find((game) => game._id === id)
     if (!game) return null
@@ -532,7 +532,7 @@ export class CsvStorage implements Storage {
     return joiner.joinToGames(filteredGames)
   }
 
-  async getGameResults(gameId: number | number[]): Promise<GameResult[]> {
+  async getGameResults(gameId: string | string[]): Promise<GameResult[]> {
     if (Array.isArray(gameId))
       return Promise.all(gameId.map((id) => this.getGameResults(id))).then((results) => results.flat())
 

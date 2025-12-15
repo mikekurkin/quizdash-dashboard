@@ -11,7 +11,7 @@ export const SeriesMetricsSchema = z.object({
   maxSumId: z.string().nullish(),
   roundsCount: z.number().default(0),
   maxRoundSums: z.array(z.number()).default([]),
-  maxRoundSumIds: z.array(z.number()).default([]),
+  maxRoundSumIds: z.array(z.string()).default([]),
 })
 
 export const SeriesSchema = BaseSeriesSchema.merge(SeriesMetricsSchema)

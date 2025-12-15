@@ -51,7 +51,21 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<Game>[]
     header: columnHeaders['_id'],
     size: 50,
     cell: ({ row }) => {
-      return <LinkCell row={row}>{row.original._id}</LinkCell>
+      const displayId = row.original._id.length > 6 ? `\u2026${row.original._id.slice(-5)}` : row.original._id
+      const href =
+        row.original._id.length > 6
+          ? `https://${row.original.city.slug}.quizplease.ru/game/${row.original._id}`
+          : `https://quizplease.ru/game-page?id=${row.original._id}`
+      return (
+        <LinkCell row={row}>
+          <Link
+            to={href}
+            className="text-muted-foreground/60 hover:text-muted-foreground/80 hover:underline decoration-dotted font-mono text-xs/tight"
+          >
+            {displayId}
+          </Link>
+        </LinkCell>
+      )
     },
   },
   {

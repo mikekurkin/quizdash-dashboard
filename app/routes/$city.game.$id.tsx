@@ -21,7 +21,7 @@ export async function loader({ params }: LoaderFunctionArgs) {
     throw new Response('Not Found', { status: 404 })
   }
 
-  const gameId = parseInt(params.id)
+  const gameId = params.id
   const game = await storage.getGameById(gameId)
 
   if (game === null) {
