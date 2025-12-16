@@ -10,5 +10,7 @@
   },
   "datePicker": {
     "placeholder": "Выберите дату"
-  }
+  },
+  "endOfResults": "Иии... Это всё",
+  "noResults": "Игры не найдены"
 }

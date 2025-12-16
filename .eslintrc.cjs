@@ -66,6 +66,17 @@ module.exports = {
           },
         },
       },
+      rules: {
+        '@typescript-eslint/no-unused-vars': [
+          'error',
+          {
+            argsIgnorePattern: '^_[^_].*$|^_$',
+            varsIgnorePattern: '^_[^_].*$|^_$',
+            caughtErrorsIgnorePattern: '^_[^_].*$|^_$',
+            destructuredArrayIgnorePattern: '^_[^_].*$|^_$',
+          },
+        ],
+      },
       extends: ['plugin:@typescript-eslint/recommended', 'plugin:import/recommended', 'plugin:import/typescript'],
     },
 
@@ -76,8 +87,8 @@ module.exports = {
         node: true,
       },
     },
-
     // ShadCN Select issue: https://github.com/shadcn-ui/ui/issues/120
+
     {
       files: ['**/components/ui/*.tsx'],
       rules: {

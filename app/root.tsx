@@ -13,16 +13,20 @@ import { QueryProvider } from './context/QueryProvider'
 
 export const links: LinksFunction = () => [
   { rel: 'stylesheet', href: styles },
-  { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
-  {
-    rel: 'preconnect',
-    href: 'https://fonts.gstatic.com',
-    crossOrigin: 'anonymous',
-  },
-  {
-    rel: 'stylesheet',
-    href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
-  },
+  { rel: 'icon', type: 'image/png', href: '/favicon-16x16.png' },
+  { rel: 'icon', type: 'image/png', href: '/favicon-32x32.png' },
+  { rel: 'apple-touch-icon', sizes: '180x180', href: '/apple-touch-icon.png' },
+  { rel: 'manifest', href: '/site.webmanifest' },
+  // // { rel: 'preconnect', href: 'https://fonts.googleapis.com' },
+  // // {
+  // //   rel: 'preconnect',
+  // //   href: 'https://fonts.gstatic.com',
+  // //   crossOrigin: 'anonymous',
+  // // },
+  // {
+  //   rel: 'stylesheet',
+  //   href: 'https://fonts.googleapis.com/css2?family=Inter:ital,opsz,wght@0,14..32,100..900;1,14..32,100..900&display=swap',
+  // },
 ]
 
 // Return the theme from the session storage using the loader

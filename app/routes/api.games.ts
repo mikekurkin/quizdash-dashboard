@@ -28,7 +28,7 @@ export async function loader({ request }: LoaderFunctionArgs) {
 
   // Add artificial delay in development to simulate network latency
   // if (process.env.NODE_ENV === 'development') {
-  //   await new Promise(resolve => setTimeout(resolve, 1000));
+  //   await new Promise((resolve) => setTimeout(resolve, 1000))
   // }
 
   return Response.json(response)
