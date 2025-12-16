@@ -1,0 +1,45 @@
+name: Build and Healthcheck Docker Image
+
+on:
+  push:
+    branches-ignore: ['main']
+
+  pull_request:
+    branches-ignore: ['main']
+
+jobs:
+  build_and_healthcheck:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      - name: Build Docker image (local only)
+        uses: docker/build-push-action@v5
+        with:
+          context: .
+          file: ./Dockerfile
+          push: false
+          load: true
+          tags: quizdash-health:${{ github.sha }}
+
+      - name: Run container
+        run: |
+          docker run -d --name quizdash-health-container -p 3000:3000 quizdash-health:${{ github.sha }}
+
+      - name: Run container and wait for HEALTHCHECK
+        uses: zethuman/healthcheck@v0.0.1
+        with:
+          name: quizdash-health-container
+
+      - name: Cleanup
+        if: always()
+        run: |
+          docker ps -a
+          docker logs quizdash-health-container || true
+          docker rm -f quizdash-health-container || true
+          docker rmi quizdash-health:${{ github.sha }} || true
