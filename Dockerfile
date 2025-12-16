@@ -63,3 +63,6 @@ ENTRYPOINT ["/sbin/tini", "--", "/app/scripts/maxmind-init.sh"]
 
 # Start the server
 CMD ["npm", "run", "start"]
+
+HEALTHCHECK --interval=30s --timeout=60s --retries=10 \
+    CMD curl -f http://127.0.0.1:3000/health || exit 1
