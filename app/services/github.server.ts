@@ -229,54 +229,75 @@ export class GitHubService {
     try {
       console.log(`Fetching GitHub content: ${owner}/${repo}/${fullPath} (branch: ${branch})`)
 
-      // First try to get as raw content
-      const response = await this.octokit.repos.getContent({
+      // First request metadata/content (no raw) so we can branch based on availability
+      const meta = await this.octokit.repos.getContent({
         owner,
         repo,
         path: fullPath,
         ref: branch,
-        mediaType: {
-          format: 'raw',
-        },
       })
 
-      // Convert response data to Uint8Array
-      let binaryData: Uint8Array
+      if (Array.isArray(meta.data)) {
+        throw new Error(`Path refers to a directory, not a file: ${fullPath}`)
+      }
 
-      // Handle potential LFS pointer
-      if (typeof response.data === 'string' && this.isLFSPointer(response.data)) {
-        console.log(`Detected Git LFS pointer for ${fullPath}, retrieving actual content`)
-        const pointer = this.parseLFSPointer(response.data)
+      // meta.data is a file descriptor
+      const fileData = meta.data as unknown as {
+        type: string
+        size: number
+        sha: string
+        encoding?: string
+        content?: string
+        download_url?: string | null
+      }
 
-        if (pointer) {
-          try {
-            // Fetch the actual LFS content
-            binaryData = await this.fetchLFSContent(pointer)
-            console.log(`Successfully retrieved LFS content for ${fullPath} (${pointer.size} bytes)`)
-          } catch (error: unknown) {
-            console.error(`LFS content retrieval failed for ${fullPath}:`, error)
-            const errorMessage = error instanceof Error ? error.message : String(error)
-            throw new Error(
-              `Failed to retrieve LFS content for ${fullPath}: ${errorMessage}. Make sure your GitHub token has sufficient permissions and the repo is properly configured for LFS.`
-            )
+      // Case 1: Content is included in API response (<= 1MB), base64 encoded
+      if (fileData.content && fileData.encoding === 'base64') {
+        const asBytes = this.decodeBase64ToUint8Array(fileData.content)
+        const asText = new TextDecoder().decode(asBytes)
+
+        // If it's an LFS pointer, fetch the actual LFS content
+        if (this.isLFSPointer(asText)) {
+          const pointer = this.parseLFSPointer(asText)
+          if (!pointer) {
+            throw new Error(`Failed to parse LFS pointer for ${fullPath}`)
           }
-        } else {
-          throw new Error(
-            `Failed to parse LFS pointer for ${fullPath}. The file appears to be a Git LFS pointer but couldn't be properly parsed.`
-          )
+          const lfsData = await this.fetchLFSContent(pointer)
+          return { data: lfsData, url: meta.url }
         }
-      } else if (response.data instanceof Uint8Array) {
-        binaryData = response.data
-      } else if (typeof response.data === 'string') {
-        binaryData = new TextEncoder().encode(response.data)
-      } else {
-        throw new Error(`Unexpected data type: ${typeof response.data}`)
+
+        // Regular file (non-LFS), return decoded bytes
+        return { data: asBytes, url: meta.url }
       }
 
-      return {
-        data: binaryData,
-        url: response.url,
+      // Case 2: No inline content (likely large file). Try download_url first.
+      if (fileData.download_url) {
+        const res = await fetch(fileData.download_url, {
+          headers: this.config.token ? { Authorization: `token ${this.config.token}` } : undefined,
+        })
+        if (!res.ok) {
+          throw new Error(`Failed to download file via download_url: ${res.status} ${res.statusText}`)
+        }
+        const buf = new Uint8Array(await res.arrayBuffer())
+        return { data: buf, url: meta.url }
       }
+
+      // Case 3: Fallback to Git blob API to retrieve content (base64)
+      const blob = await this.octokit.git.getBlob({ owner, repo, file_sha: fileData.sha })
+      if (!('content' in blob.data) || typeof blob.data.content !== 'string') {
+        throw new Error('Unexpected blob response format')
+      }
+      const blobBytes = this.decodeBase64ToUint8Array(blob.data.content)
+      const blobText = new TextDecoder().decode(blobBytes)
+      if (this.isLFSPointer(blobText)) {
+        const pointer = this.parseLFSPointer(blobText)
+        if (!pointer) {
+          throw new Error(`Failed to parse LFS pointer from blob for ${fullPath}`)
+        }
+        const lfsData = await this.fetchLFSContent(pointer)
+        return { data: lfsData, url: meta.url }
+      }
+      return { data: blobBytes, url: meta.url }
     } catch (error) {
       this.handleError(error, `Error getting file contents for ${fullPath}:`)
       throw error
@@ -318,45 +339,46 @@ export class GitHubService {
       }
 
       // Get SHA and size from GitHub response
-      const fileData = response.data as { sha: string; size: number; git_url?: string }
-      const _remoteSha = fileData.sha // Keep for future SHA comparison if needed
+      const fileData = response.data as { sha: string; size: number }
       const remoteSize = fileData.size
 
-      // Check if file is LFS (in which case we need to check the LFS pointer)
-      const isLfs = fileData.git_url?.includes('git-lfs')
+      // Determine if file is an LFS pointer by inspecting the blob content
+      try {
+        const blob = await this.octokit.git.getBlob({
+          owner: this.config.owner,
+          repo: this.config.repo,
+          file_sha: fileData.sha,
+        })
+        if ('content' in blob.data && typeof blob.data.content === 'string') {
+          const blobText = new TextDecoder().decode(this.decodeBase64ToUint8Array(blob.data.content))
+          if (this.isLFSPointer(blobText)) {
+            const pointer = this.parseLFSPointer(blobText)
+            if (pointer) {
+              const lfsMetadataPath = `${localPath}.lfs-metadata.json`
+              let needsUpdate = true
 
-      if (isLfs) {
-        console.log(`${fullPath} is an LFS file, checking pointer...`)
-        // For LFS files, we need to fetch the pointer and compare oid
-        const lfsContent = await this.octokit.request('GET ' + fileData.git_url)
-        if (typeof lfsContent.data === 'string' && this.isLFSPointer(lfsContent.data)) {
-          const pointer = this.parseLFSPointer(lfsContent.data)
-          if (pointer) {
-            // Store LFS metadata in a simple JSON file for future comparisons
-            const lfsMetadataPath = `${localPath}.lfs-metadata.json`
-            let needsUpdate = true
-
-            if (existsSync(lfsMetadataPath)) {
-              try {
-                const storedMetadata = JSON.parse(readFileSync(lfsMetadataPath, 'utf8'))
-                if (storedMetadata.oid === pointer.oid && storedMetadata.size === pointer.size) {
-                  console.log(`LFS file ${fullPath} has not changed (matching oid)`)
-                  needsUpdate = false
+              if (existsSync(lfsMetadataPath)) {
+                try {
+                  const storedMetadata = JSON.parse(readFileSync(lfsMetadataPath, 'utf8'))
+                  if (storedMetadata.oid === pointer.oid && storedMetadata.size === pointer.size) {
+                    console.log(`LFS file ${fullPath} has not changed (matching oid)`)
+                    needsUpdate = false
+                  }
+                } catch (error) {
+                  console.error(`Error reading LFS metadata: ${error}`)
                 }
-              } catch (error) {
-                console.error(`Error reading LFS metadata: ${error}`)
               }
-            }
 
-            if (needsUpdate) {
-              console.log(`LFS file ${fullPath} has changed or metadata not found`)
-              return true
+              if (needsUpdate) {
+                console.log(`LFS file ${fullPath} has changed or metadata not found`)
+                return true
+              }
+              return false
             }
-            return false
           }
         }
-        // Fallback to size comparison for LFS if we couldn't check the pointer
-        return remoteSize !== localSize
+      } catch (e) {
+        console.warn(`Failed to inspect blob for ${fullPath}, falling back to size/time checks`)
       }
 
       // For regular files, check if size is different (basic check)
@@ -411,32 +433,37 @@ export class GitHubService {
       console.log(`📥 Downloaded ${githubPath} to ${localPath}`)
 
       // If this is an LFS file, save metadata for future comparisons
-      const rawData = await this.octokit.repos.getContent({
+      const rawMeta = await this.octokit.repos.getContent({
         owner: this.config.owner,
         repo: this.config.repo,
         path: this.normalizePath(githubPath),
         ref: this.config.branch,
       })
-
-      if (!Array.isArray(rawData.data) && rawData.data.git_url?.includes('git-lfs')) {
-        const lfsContent = await this.octokit.request('GET ' + rawData.data.git_url)
-        if (typeof lfsContent.data === 'string' && this.isLFSPointer(lfsContent.data)) {
-          const pointer = this.parseLFSPointer(lfsContent.data)
-          if (pointer) {
-            // Save LFS metadata for future comparisons
-            writeFileSync(
-              `${localPath}.lfs-metadata.json`,
-              JSON.stringify(
-                {
-                  oid: pointer.oid,
-                  size: pointer.size,
-                  version: pointer.version,
-                  downloadTime: new Date().toISOString(),
-                },
-                null,
-                2
+      if (!Array.isArray(rawMeta.data)) {
+        const blob = await this.octokit.git.getBlob({
+          owner: this.config.owner,
+          repo: this.config.repo,
+          file_sha: rawMeta.data.sha,
+        })
+        if ('content' in blob.data && typeof blob.data.content === 'string') {
+          const text = new TextDecoder().decode(this.decodeBase64ToUint8Array(blob.data.content))
+          if (this.isLFSPointer(text)) {
+            const pointer = this.parseLFSPointer(text)
+            if (pointer) {
+              writeFileSync(
+                `${localPath}.lfs-metadata.json`,
+                JSON.stringify(
+                  {
+                    oid: pointer.oid,
+                    size: pointer.size,
+                    version: pointer.version,
+                    downloadTime: new Date().toISOString(),
+                  },
+                  null,
+                  2
+                )
               )
-            )
+            }
           }
         }
       }
@@ -582,6 +609,13 @@ export class GitHubService {
     if (fullPath === '/') return ''
 
     return fullPath
+  }
+
+  /**
+   * Decode a base64 string into a Uint8Array
+   */
+  private decodeBase64ToUint8Array(base64: string): Uint8Array {
+    return Uint8Array.from(Buffer.from(base64, 'base64'))
   }
 
   /**

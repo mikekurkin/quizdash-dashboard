@@ -14,18 +14,35 @@ else
   if [ -n "$MAXMIND_ACCOUNT_ID" ] && [ -n "$MAXMIND_LICENSE_KEY" ]; then
     echo "Downloading MaxMind DB to $MAXMIND_DB_PATH"
     mkdir -p "$DB_DIR"
+    # Temporarily disable 'exit on error' so we can handle failures gracefully
+    set +e
     curl -sSL -u "${MAXMIND_ACCOUNT_ID}:${MAXMIND_LICENSE_KEY}" \
       'https://download.maxmind.com/geoip/databases/GeoLite2-City/download?suffix=tar.gz' \
       -o "$TMPDIR/maxmind.tar.gz"
-    tar -xzf "$TMPDIR/maxmind.tar.gz" -C "$TMPDIR"
-    MMDB_FILE=$(find "$TMPDIR" -type f -name '*.mmdb' -print -quit)
+    CURL_EXIT=$?
 
-    if [ -z "$MMDB_FILE" ]; then
-      echo "Could not locate *.mmdb inside archive; continuing without MaxMind"
+    if [ "$CURL_EXIT" -ne 0 ]; then
+      echo "Failed to download MaxMind DB (curl exit $CURL_EXIT); continuing without MaxMind"
     else
-      mv "$MMDB_FILE" "$MAXMIND_DB_PATH"
-      chown "$(id -u)":"$(id -g)" "$MAXMIND_DB_PATH"
+      tar -xzf "$TMPDIR/maxmind.tar.gz" -C "$TMPDIR"
+      TAR_EXIT=$?
+
+      if [ "$TAR_EXIT" -ne 0 ]; then
+        echo "Failed to extract MaxMind DB archive (tar exit $TAR_EXIT); continuing without MaxMind"
+      else
+        MMDB_FILE=$(find "$TMPDIR" -type f -name '*.mmdb' -print -quit)
+
+        if [ -z "$MMDB_FILE" ]; then
+          echo "Could not locate *.mmdb inside archive; continuing without MaxMind"
+        else
+          mv "$MMDB_FILE" "$MAXMIND_DB_PATH"
+          chown "$(id -u)":"$(id -g)" "$MAXMIND_DB_PATH"
+        fi
+      fi
     fi
+
+    # Re-enable 'exit on error' for the rest of the script
+    set -e
 
     rm -rf "$TMPDIR"
   else
