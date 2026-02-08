@@ -4,6 +4,7 @@ import type game from '../../public/locales/ru/game.json'
 import type games from '../../public/locales/ru/games.json'
 import type pack from '../../public/locales/ru/pack.json'
 import type team from '../../public/locales/ru/team.json'
+import type teams from '../../public/locales/ru/teams.json'
 
 // type LocaleFiles = {
 //   [K in keyof typeof import('../../public/locales/ru/*.json')]:
@@ -18,6 +19,7 @@ declare module 'i18next' {
       game: typeof game
       pack: typeof pack
       team: typeof team
+      teams: typeof teams
     }
     returnNull: false
     jsonFormat: 'v4'

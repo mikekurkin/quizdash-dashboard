@@ -20,6 +20,7 @@ export interface MultiSelectProps {
   placeholder?: string
   searchPlaceholder?: string
   disabled?: boolean
+  triggerClassName?: string
 
   search?: string
   onSearchChange?: (value: string) => void
@@ -46,6 +47,7 @@ export function MultiSelect({
   placeholder = 'Select options',
   searchPlaceholder = 'Search...',
   disabled,
+  triggerClassName,
   search,
   onSearchChange,
   shouldFilter = true,
@@ -103,7 +105,7 @@ export function MultiSelect({
           variant="outline"
           role="combobox"
           aria-expanded={open}
-          className={cn('w-full justify-between min-h-10 h-auto px-2 whitespace-normal items-center')}
+          className={cn('w-full justify-between min-h-10 h-auto px-2 whitespace-normal items-center', triggerClassName)}
           disabled={disabled}
         >
           <div className="flex flex-1 min-w-0 flex-wrap gap-1.5">
