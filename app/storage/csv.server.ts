@@ -18,10 +18,9 @@ import { BaseSeries, BaseSeriesSchema, Series } from '~/schemas/series'
 import { Team, TeamSchema, TeamsResponse, TeamsResponseSchema } from '~/schemas/team'
 import { dataSyncService } from '~/services/dataSync.server'
 import { MetricsCalculator } from '~/services/metrics.server'
-import { QueryParams } from '~/types/data'
 import { CsvCache } from './csvCache.server'
 import { DerivedDataJoiner } from './derivedDataJoiner.server'
-import { FindTeamResultsParams, GetGamesParams, Storage } from './interface.server'
+import { FindTeamResultsParams, GetGamesParams, GetTeamsParams, Storage } from './interface.server'
 
 // Get data directory from environment configuration
 const config = getDataSourceConfig()
@@ -695,7 +694,7 @@ export class CsvStorage implements Storage {
     return series !== null ? joiner.joinToSeries(series) : null
   }
 
-  async getTeams(params?: QueryParams & { cityId?: number }): Promise<TeamsResponse> {
+  async getTeams(params?: GetTeamsParams): Promise<TeamsResponse> {
     const allTeams = await this.getRawTeams()
 
     const filteredTeams = allTeams.filter((team) => {
@@ -704,7 +703,35 @@ export class CsvStorage implements Storage {
       return true
     })
 
-    const sortedTeams = filteredTeams.sort((a, b) => a.name.localeCompare(b.name))
+    const sort = params?.sort ?? 'name'
+    const order = params?.order ?? 'asc'
+    const direction = order === 'desc' ? -1 : 1
+    const normalizedSearch = params?.search?.toLowerCase().trim()
+
+    const sortedTeams = filteredTeams.sort((a, b) => {
+      if (normalizedSearch) {
+        const aName = a.name.toLowerCase()
+        const bName = b.name.toLowerCase()
+        const aStarts = aName.startsWith(normalizedSearch)
+        const bStarts = bName.startsWith(normalizedSearch)
+        if (aStarts !== bStarts) {
+          return aStarts ? -1 : 1
+        }
+      }
+
+      switch (sort) {
+        case 'city': {
+          const aCity = a.city?.name ?? ''
+          const bCity = b.city?.name ?? ''
+          return direction * aCity.localeCompare(bCity)
+        }
+        case 'id':
+          return direction * a._id.localeCompare(b._id)
+        case 'name':
+        default:
+          return direction * a.name.localeCompare(b.name)
+      }
+    })
 
     const offset = params?.cursor ?? 0
     const limit = params?.limit ?? 20

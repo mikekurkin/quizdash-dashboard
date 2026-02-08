@@ -28,6 +28,15 @@ export type FindTeamResultsParams = {
 } & ({ seriesId?: string; seriesSlug?: never } | { seriesId?: never; seriesSlug?: string }) &
   ({ cityId?: number; citySlug?: never } | { cityId?: never; citySlug?: string })
 
+export type GetTeamsParams = {
+  limit?: number
+  cursor?: number
+  search?: string
+  sort?: string
+  order?: 'asc' | 'desc'
+  cityId?: number
+}
+
 export interface Storage {
   // City operations
   getCities(): Promise<City[]>
@@ -52,7 +61,7 @@ export interface Storage {
   findTeamResults(params: FindTeamResultsParams): Promise<GameResultsResponse>
 
   // Team operations
-  getTeams(): Promise<TeamsResponse>
+  getTeams(params?: GetTeamsParams): Promise<TeamsResponse>
   getTeamBySlug(slug: string, cityId: number): Promise<Team | null>
 
   // Series operations
