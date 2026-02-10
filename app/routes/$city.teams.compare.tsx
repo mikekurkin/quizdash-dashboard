@@ -30,7 +30,6 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const city = citySlug ? await storage.getCityBySlug(citySlug) : null
   const selectedTeamOptions: MultiSelectOption[] = []
   const selectedTeams: { team: Team; results: MinimalGameResult[] }[] = []
-
   if (city && selectedTeamSlugs.length > 0) {
     const teams = await Promise.all(selectedTeamSlugs.map((slug) => storage.getTeamBySlug(slug, city._id)))
     const results = await Promise.all(
@@ -46,6 +45,7 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
         results: results[i]!.sort((a, b) => a.game_date.getTime() - b.game_date.getTime()),
       })
     }
+
   }
 
   const seriesIds = Array.from(
@@ -55,6 +55,13 @@ export async function loader({ request, params }: LoaderFunctionArgs) {
   const series: Series[] = seriesIds.length ? await storage.getSeriesById(seriesIds) : []
   const seriesCounts = new Map<string, number>()
   for (const team of selectedTeams) {
+    const metrics = team.team.metrics
+    if (metrics) {
+      for (const [seriesId, seriesMetrics] of Object.entries(metrics.series)) {
+        seriesCounts.set(seriesId, (seriesCounts.get(seriesId) ?? 0) + seriesMetrics.gamesCount)
+      }
+      continue
+    }
     for (const result of team.results) {
       seriesCounts.set(result.game_series_id, (seriesCounts.get(result.game_series_id) ?? 0) + 1)
     }

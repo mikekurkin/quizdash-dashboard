@@ -36,6 +36,7 @@ export const TeamInfo = ({
   setDate,
   labels,
   series,
+  seriesId,
 }: {
   className?: string
   team: Team
@@ -45,7 +46,41 @@ export const TeamInfo = ({
   setDate: (date: DateRange | null) => void
   labels: TeamInfoLabels
   series: Series[]
+  seriesId?: string | null
 }) => {
+  const useMetrics = team.metrics && !date
+  const seriesMetrics = useMetrics && seriesId ? team.metrics?.series?.[seriesId] : undefined
+
+  const overall = useMetrics
+    ? {
+        games: team.metrics!.gamesCount,
+        avgSum: team.metrics!.avgSum,
+        avgPlace: team.metrics!.avgPlace,
+      }
+    : {
+        games: results.length,
+        avgSum: results.length > 0 ? results.reduce((sum, r) => sum + r.sum, 0) / results.length : 0,
+        avgPlace: results.length > 0 ? results.reduce((sum, r) => sum + r.place, 0) / results.length : 0,
+      }
+
+  const inSeries = useMetrics && seriesId
+    ? {
+        games: seriesMetrics?.gamesCount ?? 0,
+        avgSum: seriesMetrics?.avgSum ?? 0,
+        avgPlace: seriesMetrics?.avgPlace ?? 0,
+      }
+    : {
+        games: filteredResults?.length ?? 0,
+        avgSum:
+          filteredResults && filteredResults.length > 0
+            ? filteredResults.reduce((sum, r) => sum + r.sum, 0) / filteredResults.length
+            : 0,
+        avgPlace:
+          filteredResults && filteredResults.length > 0
+            ? filteredResults.reduce((sum, r) => sum + r.place, 0) / filteredResults.length
+            : 0,
+      }
+
   return (
     <Card className={cn('pt-0 px-2', className)}>
       <CardHeader className="flex flex-row items-center gap-2 space-y-0 border-b py-5 justify-between">
@@ -78,10 +113,12 @@ export const TeamInfo = ({
           </div>
           <div className="flex items-center gap-3">
             <div className="text-right w-16">
-              <span className="text-sm font-medium">{results.length}</span>
+              <span className="text-sm font-medium">{overall.games}</span>
             </div>
             <div className="text-right w-16">
-              <span className="text-sm font-medium text-primary">{filteredResults?.length || '-'}</span>
+              <span className="text-sm font-medium text-primary">
+                {filteredResults === null ? '-' : inSeries.games}
+              </span>
             </div>
           </div>
         </div>
@@ -95,23 +132,14 @@ export const TeamInfo = ({
           <div className="flex items-center gap-3">
             <div className="text-right w-16">
               <span className="text-sm font-medium">
-                {(results.length > 0 ? results.reduce((sum, r) => sum + r.sum, 0) / results.length : 0).toLocaleString(
-                  'ru-RU',
-                  {
-                    minimumFractionDigits: 1,
-                    maximumFractionDigits: 1,
-                  }
-                )}
+                {overall.avgSum.toLocaleString('ru-RU', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}
               </span>
             </div>
             <div className="text-right w-16">
               <span className="text-sm font-medium text-primary">
                 {!filteredResults
                   ? '-'
-                  : (filteredResults.length > 0
-                      ? filteredResults.reduce((sum, r) => sum + r.sum, 0) / filteredResults.length
-                      : 0
-                    ).toLocaleString('ru-RU', {
+                  : inSeries.avgSum.toLocaleString('ru-RU', {
                       minimumFractionDigits: 1,
                       maximumFractionDigits: 1,
                     })}
@@ -129,20 +157,14 @@ export const TeamInfo = ({
           <div className="flex items-center gap-3">
             <div className="text-right w-16">
               <span className="text-sm font-medium">
-                {(results.length > 0
-                  ? results.reduce((sum, r) => sum + r.place, 0) / results.length
-                  : 0
-                ).toLocaleString('ru-RU', { maximumFractionDigits: 0 })}
+                {overall.avgPlace.toLocaleString('ru-RU', { maximumFractionDigits: 0 })}
               </span>
             </div>
             <div className="text-right w-16">
               <span className="text-sm font-medium text-primary">
                 {!filteredResults
                   ? '-'
-                  : (filteredResults.length > 0
-                      ? filteredResults.reduce((sum, r) => sum + r.place, 0) / filteredResults.length
-                      : 0
-                    ).toLocaleString('ru-RU', { maximumFractionDigits: 0 })}
+                  : inSeries.avgPlace.toLocaleString('ru-RU', { maximumFractionDigits: 0 })}
               </span>
             </div>
           </div>

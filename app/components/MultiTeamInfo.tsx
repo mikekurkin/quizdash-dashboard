@@ -70,12 +70,50 @@ export function MultiTeamInfo({
   const rows = useMemo(
     () =>
       teams.map(({ team, results }) => {
-        const filtered = selectedSeriesId ? results.filter((r) => r.game_series_id === selectedSeriesId) : results
-        const stats = calculateStats(filtered)
+        const metrics = team.metrics
+        const seriesMetrics = selectedSeriesId ? metrics?.series?.[selectedSeriesId] : undefined
 
+        if (metrics) {
+          const gamesCount = seriesMetrics?.gamesCount ?? metrics.gamesCount
+          const avgSum = seriesMetrics?.avgSum ?? metrics.avgSum
+          const avgPlace = seriesMetrics?.avgPlace ?? metrics.avgPlace
+          const bestSum = seriesMetrics?.bestSum ?? metrics.bestSum
+          const bestGameId = seriesMetrics?.bestGameId ?? metrics.bestGameId
+          const bestSeriesId = selectedSeriesId ?? metrics.bestSeriesId ?? null
+
+          const stats =
+            gamesCount > 0
+              ? {
+                  games: gamesCount,
+                  avgSum,
+                  avgPlace,
+                  best: bestSum && bestGameId ? { sum: bestSum, gameId: bestGameId, seriesId: bestSeriesId } : null,
+                }
+              : {
+                  games: 0,
+                  avgSum: null,
+                  avgPlace: null,
+                  best: null,
+                }
+
+          return {
+            team,
+            stats,
+          }
+        }
+
+        const filtered = selectedSeriesId ? results.filter((r) => r.game_series_id === selectedSeriesId) : results
+        const calculated = calculateStats(filtered)
         return {
           team,
-          stats,
+          stats: {
+            games: calculated.games,
+            avgSum: calculated.avgSum,
+            avgPlace: calculated.avgPlace,
+            best: calculated.best
+              ? { sum: calculated.best.sum, gameId: calculated.best.game_id, seriesId: calculated.best.game_series_id }
+              : null,
+          },
         }
       }),
     [teams, selectedSeriesId]
@@ -116,10 +154,12 @@ export function MultiTeamInfo({
                 rows.map(({ team, stats }) => {
                   const citySlug = team.city?.slug
                   const teamHref = citySlug ? `/${citySlug}/team/${team.slug}` : undefined
-                  const bestHref =
-                    citySlug && stats.best ? `/${citySlug}/game/${stats.best.game_id}` : undefined
-                  const seriesTotal = stats.best ? seriesTotals.get(stats.best.game_series_id) : undefined
-                  const isTotal = seriesTotal !== undefined && stats.best?.sum === seriesTotal
+                  const bestGameId = stats.best ? stats.best.gameId : null
+                  const bestSeriesId = stats.best ? stats.best.seriesId : null
+                  const bestSum = stats.best ? stats.best.sum : null
+                  const bestHref = citySlug && bestGameId ? `/${citySlug}/game/${bestGameId}` : undefined
+                  const seriesTotal = bestSeriesId ? seriesTotals.get(bestSeriesId) : undefined
+                  const isTotal = seriesTotal !== undefined && bestSum === seriesTotal
 
                   return (
                     <tr key={team._id} className="border-b last:border-b-0">
@@ -148,7 +188,7 @@ export function MultiTeamInfo({
                           : stats.avgPlace.toLocaleString('ru-RU', { maximumFractionDigits: 0 })}
                       </td>
                       <td className="py-1.5 text-right">
-                        {stats.best ? (
+                        {bestSum !== null ? (
                           bestHref ? (
                             <Link
                               to={bestHref}
@@ -157,7 +197,7 @@ export function MultiTeamInfo({
                                 isTotal && 'bg-yellow-400 text-foreground dark:text-primary-foreground'
                               )}
                             >
-                              {stats.best.sum.toLocaleString('ru-RU', {
+                              {bestSum.toLocaleString('ru-RU', {
                                 minimumFractionDigits: 1,
                                 maximumFractionDigits: 1,
                               })}
@@ -169,7 +209,7 @@ export function MultiTeamInfo({
                                 isTotal && 'bg-yellow-400 text-foreground dark:text-primary-foreground'
                               )}
                             >
-                              {stats.best.sum.toLocaleString('ru-RU', {
+                              {bestSum.toLocaleString('ru-RU', {
                                 minimumFractionDigits: 1,
                                 maximumFractionDigits: 1,
                               })}

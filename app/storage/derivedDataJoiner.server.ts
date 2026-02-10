@@ -5,9 +5,17 @@ import type { BaseGameResult, GameResult } from '~/schemas/gameResult'
 import { defaultGameResultMetrics } from '~/schemas/gameResult'
 import { defaultPackMetrics } from '~/schemas/pack'
 import { BaseSeries, Series } from '~/schemas/series'
+import type { Team } from '~/schemas/team'
 
 export class DerivedDataJoiner {
   constructor(private derivedData: DerivedData) {}
+
+  joinToTeams<T extends Team | Team[]>(teams: T): T extends Team[] ? Team[] : Team {
+    if (Array.isArray(teams)) {
+      return teams.map((team) => this.joinToTeam(team)) as T extends Team[] ? Team[] : Team
+    }
+    return this.joinToTeam(teams) as T extends Team[] ? Team[] : Team
+  }
 
   joinToGames<T extends BaseGame | BaseGame[]>(games: T): T extends BaseGame[] ? Game[] : Game {
     if (Array.isArray(games)) {
@@ -74,6 +82,13 @@ export class DerivedDataJoiner {
     return {
       ...series,
       ...this.derivedData.series[series._id],
+    }
+  }
+
+  private joinToTeam(team: Team): Team {
+    return {
+      ...team,
+      metrics: this.derivedData.teams[team._id],
     }
   }
 }

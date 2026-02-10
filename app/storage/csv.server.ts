@@ -733,9 +733,12 @@ export class CsvStorage implements Storage {
       }
     })
 
+    const joiner = await this.getJoiner()
+    const joinedTeams = joiner.joinToTeams(sortedTeams)
+
     const offset = params?.cursor ?? 0
     const limit = params?.limit ?? 20
-    const paginatedTeams = sortedTeams.slice(offset, offset + limit)
+    const paginatedTeams = joinedTeams.slice(offset, offset + limit)
 
     return TeamsResponseSchema.strip().parse({
       data: paginatedTeams,
@@ -747,8 +750,12 @@ export class CsvStorage implements Storage {
 
   async getTeamBySlug(slug: string, cityId: number): Promise<Team | null> {
     const teams = await this.getRawTeams()
-    return teams.find((team) => team.slug === slug && team.city?._id === cityId) || null
+    const team = teams.find((team) => team.slug === slug && team.city?._id === cityId) || null
+    if (!team) return null
+    const joiner = await this.getJoiner()
+    return joiner.joinToTeams(team)
   }
+
 
   async getTeamResults(teamId: string): Promise<GameResult[]> {
     const allResults = await this.getRawGameResults()
