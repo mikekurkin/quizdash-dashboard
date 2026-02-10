@@ -44,7 +44,7 @@ export async function loader({ params, request }: LoaderFunctionArgs) {
     t: {
       title: t('title'),
       endOfResults: t('common:endOfResults'),
-      noResults: t('common:noResults'),
+      noResults: t('noResults'),
       columnHeaders,
       searchLabel: t('search.label'),
       searchPlaceholder: t('search.placeholder'),

@@ -10,6 +10,9 @@ export async function loader({ request }: LoaderFunctionArgs) {
   const search = url.searchParams.get('q')
   const sort = url.searchParams.get('sort')
   const order = url.searchParams.get('order')
+  const seriesSlug = url.searchParams.get('s')
+  const minGamesParam = url.searchParams.get('min_games')
+  const minGames = minGamesParam ? Number(minGamesParam) : undefined
 
   const city = citySlug ? await storage.getCityBySlug(citySlug) : null
   if (citySlug && !city) {
@@ -27,6 +30,8 @@ export async function loader({ request }: LoaderFunctionArgs) {
     search: search ?? undefined,
     sort: sort ?? undefined,
     order: order === 'asc' || order === 'desc' ? order : undefined,
+    seriesSlug: seriesSlug ?? undefined,
+    minGames: Number.isFinite(minGames) ? minGames : undefined,
   })
 
   const response = TeamsResponseSchema.parse({

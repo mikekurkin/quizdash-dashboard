@@ -91,11 +91,31 @@ export class MetricsCalculator {
 
     const maxSums = new Map<string, number>()
     const maxSumIds = new Map<string, string | null>()
+    const gamesCounts = new Map<string, number>()
+    const gamesCountsByCity = new Map<string, Record<string, number>>()
     const roundCounts = new Map<string, number>()
     const maxRoundSums = new Map<string, number[]>()
     const maxRoundSumIds = new Map<string, string[]>()
 
     for (const [seriesId, results] of seriesResultsMap) {
+      const gameIds = new Set<string>()
+      const cityGameIds = new Map<string, Set<string>>()
+
+      for (const result of results) {
+        const gameId = result.game._id
+        const cityId = String(result.game.city._id)
+        gameIds.add(gameId)
+        if (!cityGameIds.has(cityId)) cityGameIds.set(cityId, new Set())
+        cityGameIds.get(cityId)!.add(gameId)
+      }
+
+      gamesCounts.set(seriesId, gameIds.size)
+      const cityCounts: Record<string, number> = {}
+      for (const [cityId, ids] of cityGameIds) {
+        cityCounts[cityId] = ids.size
+      }
+      gamesCountsByCity.set(seriesId, cityCounts)
+
       const sortedResults = results.sort((a, b) => b.sum - a.sum)
       maxSums.set(seriesId, sortedResults.at(0)?.sum ?? 0)
       maxSumIds.set(seriesId, sortedResults.at(0)?._id ?? null)
@@ -129,6 +149,8 @@ export class MetricsCalculator {
           {
             maxSum: maxSum,
             maxSumId: maxSumIds.get(id) ?? null,
+            gamesCount: gamesCounts.get(id) ?? 0,
+            gamesCountByCity: gamesCountsByCity.get(id) ?? {},
             roundsCount: roundCounts.get(id) ?? 0,
             maxRoundSums: maxRoundSums.get(id) ?? [],
             maxRoundSumIds: maxRoundSumIds.get(id) ?? [],

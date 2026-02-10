@@ -34,8 +34,9 @@ export type GetTeamsParams = {
   search?: string
   sort?: string
   order?: 'asc' | 'desc'
-  cityId?: number
-}
+  minGames?: number
+} & ({ seriesId?: string; seriesSlug?: never } | { seriesId?: never; seriesSlug?: string }) &
+  ({ cityId?: number; citySlug?: never } | { cityId?: never; citySlug?: string })
 
 export interface Storage {
   // City operations
