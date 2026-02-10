@@ -43,6 +43,7 @@
     "csv-parse": "5.5.6",
     "csv-writer": "1.6.0",
     "date-fns": "3.6.0",
+    "date-fns-tz": "3.2.0",
     "i18next": "23.16.5",
     "i18next-browser-languagedetector": "8.0.0",
     "i18next-fs-backend": "2.3.2",

@@ -1,4 +1,5 @@
 import { Game } from '~/schemas/game'
+import { formatDateTime } from '~/lib/format'
 
 interface GameInfoProps {
   className?: string
@@ -22,16 +23,7 @@ export function GameInfo({ className, game, labels }: GameInfoProps) {
         </div>
         <div>
           {labels.date}:{' '}
-          {new Date(game.date)
-            .toLocaleString('ru-RU', {
-              year: '2-digit',
-              month: 'numeric',
-              day: 'numeric',
-              weekday: 'short',
-              hour: 'numeric',
-              minute: 'numeric',
-            })
-            .toLowerCase()}
+          {formatDateTime(new Date(game.date), game.city.timezone)}
         </div>
       </div>
       <div className="text-sm text-muted-foreground">{labels.teams}</div>
