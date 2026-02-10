@@ -74,12 +74,13 @@ export function MultiTeamInfo({
         const seriesMetrics = selectedSeriesId ? metrics?.series?.[selectedSeriesId] : undefined
 
         if (metrics) {
-          const gamesCount = seriesMetrics?.gamesCount ?? metrics.gamesCount
-          const avgSum = seriesMetrics?.avgSum ?? metrics.avgSum
-          const avgPlace = seriesMetrics?.avgPlace ?? metrics.avgPlace
-          const bestSum = seriesMetrics?.bestSum ?? metrics.bestSum
-          const bestGameId = seriesMetrics?.bestGameId ?? metrics.bestGameId
-          const bestSeriesId = selectedSeriesId ?? metrics.bestSeriesId ?? null
+          const usingSeries = Boolean(selectedSeriesId)
+          const gamesCount = usingSeries ? (seriesMetrics?.gamesCount ?? 0) : metrics.gamesCount
+          const avgSum = usingSeries ? (seriesMetrics?.avgSum ?? 0) : metrics.avgSum
+          const avgPlace = usingSeries ? (seriesMetrics?.avgPlace ?? 0) : metrics.avgPlace
+          const bestSum = usingSeries ? seriesMetrics?.bestSum ?? null : metrics.bestSum
+          const bestGameId = usingSeries ? seriesMetrics?.bestGameId ?? null : metrics.bestGameId
+          const bestSeriesId = usingSeries ? selectedSeriesId ?? null : metrics.bestSeriesId ?? null
 
           const stats =
             gamesCount > 0
@@ -87,7 +88,10 @@ export function MultiTeamInfo({
                   games: gamesCount,
                   avgSum,
                   avgPlace,
-                  best: bestSum && bestGameId ? { sum: bestSum, gameId: bestGameId, seriesId: bestSeriesId } : null,
+                  best:
+                    bestSum !== null && bestSum !== undefined && bestGameId
+                      ? { sum: bestSum, gameId: bestGameId, seriesId: bestSeriesId }
+                      : null,
                 }
               : {
                   games: 0,
