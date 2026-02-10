@@ -10,7 +10,7 @@ import { Team } from '~/schemas/team'
 import Card from './ui/card'
 import { CardContent, CardHeader, CardTitle } from './ui/chart-card'
 import { DateRangePicker } from './ui/date-range-picker'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/mobile-tooltip'
 
 export interface TeamInfoLabels {
   gamesCount: string

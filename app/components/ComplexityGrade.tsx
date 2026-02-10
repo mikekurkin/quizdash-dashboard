@@ -1,5 +1,5 @@
 import { cn } from '~/lib/utils'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/mobile-tooltip'
 import { PackMetrics } from '~/schemas/pack'
 
 interface ComplexityGradeProps {

@@ -7,7 +7,7 @@ import { Team } from '~/schemas/team'
 import Card from './ui/card'
 import { ChartConfig, ChartContainer, ChartTooltip, ChartTooltipContent } from './ui/chart'
 import { CardContent, CardHeader, CardTitle } from './ui/chart-card'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/mobile-tooltip'
 
 export interface MultiTeamRoundsLabels {
   title: string

@@ -10,7 +10,7 @@ import { Team } from '~/schemas/team'
 import { ComplexityGrade } from './ComplexityGrade'
 import { InfiniteDataTable } from './ui/infinite-data-table'
 import { TableWrapper } from './ui/table-wrapper'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/mobile-tooltip'
 
 const LinkCell = ({
   row,
