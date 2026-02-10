@@ -17,7 +17,7 @@ export class MetricsCalculator {
       results: resultsDD,
       games: gamesDD,
       packs: packsDD,
-      teams: {},
+      teams: this.calculateTeamsMetrics(results),
       series: seriesDD,
     }
   }
@@ -91,11 +91,31 @@ export class MetricsCalculator {
 
     const maxSums = new Map<string, number>()
     const maxSumIds = new Map<string, string | null>()
+    const gamesCounts = new Map<string, number>()
+    const gamesCountsByCity = new Map<string, Record<string, number>>()
     const roundCounts = new Map<string, number>()
     const maxRoundSums = new Map<string, number[]>()
     const maxRoundSumIds = new Map<string, string[]>()
 
     for (const [seriesId, results] of seriesResultsMap) {
+      const gameIds = new Set<string>()
+      const cityGameIds = new Map<string, Set<string>>()
+
+      for (const result of results) {
+        const gameId = result.game._id
+        const cityId = String(result.game.city._id)
+        gameIds.add(gameId)
+        if (!cityGameIds.has(cityId)) cityGameIds.set(cityId, new Set())
+        cityGameIds.get(cityId)!.add(gameId)
+      }
+
+      gamesCounts.set(seriesId, gameIds.size)
+      const cityCounts: Record<string, number> = {}
+      for (const [cityId, ids] of cityGameIds) {
+        cityCounts[cityId] = ids.size
+      }
+      gamesCountsByCity.set(seriesId, cityCounts)
+
       const sortedResults = results.sort((a, b) => b.sum - a.sum)
       maxSums.set(seriesId, sortedResults.at(0)?.sum ?? 0)
       maxSumIds.set(seriesId, sortedResults.at(0)?._id ?? null)
@@ -129,6 +149,8 @@ export class MetricsCalculator {
           {
             maxSum: maxSum,
             maxSumId: maxSumIds.get(id) ?? null,
+            gamesCount: gamesCounts.get(id) ?? 0,
+            gamesCountByCity: gamesCountsByCity.get(id) ?? {},
             roundsCount: roundCounts.get(id) ?? 0,
             maxRoundSums: maxRoundSums.get(id) ?? [],
             maxRoundSumIds: maxRoundSumIds.get(id) ?? [],
@@ -183,6 +205,129 @@ export class MetricsCalculator {
             pack_efficiency: result.sum / maxPackSum,
           },
         ])
+      })
+    )
+  }
+
+  private calculateTeamsMetrics(results: BaseGameResult[]) {
+    const teamMap = new Map<
+      string,
+      {
+        gamesCount: number
+        sumTotal: number
+        placeTotal: number
+        bestSum: number
+        bestGameId: string | null
+        bestSeriesId: string | null
+        series: Map<
+          string,
+          {
+            gamesCount: number
+            sumTotal: number
+            placeTotal: number
+            bestSum: number
+            bestGameId: string | null
+            roundSums: number[]
+            roundCounts: number[]
+          }
+        >
+      }
+    >()
+
+    for (const result of results) {
+      const teamId = result.team._id
+      const seriesId = result.game.series._id
+
+      let team = teamMap.get(teamId)
+      if (!team) {
+        team = {
+          gamesCount: 0,
+          sumTotal: 0,
+          placeTotal: 0,
+          bestSum: 0,
+          bestGameId: null,
+          bestSeriesId: null,
+          series: new Map(),
+        }
+        teamMap.set(teamId, team)
+      }
+
+      team.gamesCount += 1
+      team.sumTotal += result.sum
+      team.placeTotal += result.place
+      if (result.sum > team.bestSum) {
+        team.bestSum = result.sum
+        team.bestGameId = result.game._id
+        team.bestSeriesId = seriesId
+      }
+
+      let series = team.series.get(seriesId)
+      if (!series) {
+        series = {
+          gamesCount: 0,
+          sumTotal: 0,
+          placeTotal: 0,
+          bestSum: 0,
+          bestGameId: null,
+          roundSums: [],
+          roundCounts: [],
+        }
+        team.series.set(seriesId, series)
+      }
+
+      series.gamesCount += 1
+      series.sumTotal += result.sum
+      series.placeTotal += result.place
+      if (result.sum > series.bestSum) {
+        series.bestSum = result.sum
+        series.bestGameId = result.game._id
+      }
+
+      result.rounds.forEach((score, index) => {
+        series.roundSums[index] = (series.roundSums[index] ?? 0) + score
+        series.roundCounts[index] = (series.roundCounts[index] ?? 0) + 1
+      })
+    }
+
+    return Object.fromEntries(
+      Array.from(teamMap.entries()).map(([teamId, team]) => {
+        const series = Object.fromEntries(
+          Array.from(team.series.entries()).map(([seriesId, seriesMetrics]) => {
+            const avgRounds = seriesMetrics.roundSums.map((sum, index) =>
+              seriesMetrics.roundCounts[index] ? sum / seriesMetrics.roundCounts[index] : 0
+            )
+
+            return [
+              seriesId,
+              {
+                gamesCount: seriesMetrics.gamesCount,
+                sumTotal: seriesMetrics.sumTotal,
+                placeTotal: seriesMetrics.placeTotal,
+                avgSum: seriesMetrics.gamesCount ? seriesMetrics.sumTotal / seriesMetrics.gamesCount : 0,
+                avgPlace: seriesMetrics.gamesCount ? seriesMetrics.placeTotal / seriesMetrics.gamesCount : 0,
+                bestSum: seriesMetrics.bestSum,
+                bestGameId: seriesMetrics.bestGameId,
+                roundsCount: avgRounds.length,
+                avgRounds,
+              },
+            ]
+          })
+        )
+
+        return [
+          teamId,
+          {
+            gamesCount: team.gamesCount,
+            sumTotal: team.sumTotal,
+            placeTotal: team.placeTotal,
+            avgSum: team.gamesCount ? team.sumTotal / team.gamesCount : 0,
+            avgPlace: team.gamesCount ? team.placeTotal / team.gamesCount : 0,
+            bestSum: team.bestSum,
+            bestGameId: team.bestGameId,
+            bestSeriesId: team.bestSeriesId,
+            series,
+          },
+        ]
       })
     )
   }

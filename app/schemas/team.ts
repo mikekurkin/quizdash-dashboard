@@ -1,5 +1,6 @@
 import { z } from 'zod'
 import { CitySchema } from './city'
+import { TeamMetricSchema } from './teamMetric'
 
 export const TeamSchema = z.object({
   _id: z.string().uuid(),
@@ -8,6 +9,7 @@ export const TeamSchema = z.object({
   city: CitySchema.nullable(),
   previous_team_id: z.string().uuid().nullish(),
   inconsistent_rank: z.boolean(),
+  metrics: TeamMetricSchema.optional(),
 })
 
 export const TeamsResponseSchema = z.object({

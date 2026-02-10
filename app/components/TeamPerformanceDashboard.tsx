@@ -107,6 +107,7 @@ export function TeamPerformanceDashboard({
           results={results}
           filteredResults={seriesId ? filteredResultsForSeries : null}
           series={series}
+          seriesId={seriesId}
           date={date}
           setDate={handleDateChange}
           labels={labels.info}

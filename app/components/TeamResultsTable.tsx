@@ -4,12 +4,13 @@ import { ColumnDef, Row } from '@tanstack/react-table'
 import React, { lazy } from 'react'
 import { useTeamResults } from '~/hooks/useTeamResults'
 import { cn } from '~/lib/utils'
+import { formatDateTime } from '~/lib/format'
 import type { GameResult, GameResultsResponse } from '~/schemas/gameResult'
 import { Team } from '~/schemas/team'
 import { ComplexityGrade } from './ComplexityGrade'
 import { InfiniteDataTable } from './ui/infinite-data-table'
 import { TableWrapper } from './ui/table-wrapper'
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/mobile-tooltip'
 
 const LinkCell = ({
   row,
@@ -145,17 +146,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<GameRes
       const date = getValue() as Date
       return (
         <LinkCell row={row} tabIndex={-1}>
-          {/* TODO: format in city's timezone */}
-          {date
-            .toLocaleString('ru-RU', {
-              year: '2-digit',
-              month: 'numeric',
-              day: 'numeric',
-              weekday: 'short',
-              hour: 'numeric',
-              minute: 'numeric',
-            })
-            .toLowerCase()}
+          {formatDateTime(date, row.original.game.city.timezone)}
         </LinkCell>
       )
     },

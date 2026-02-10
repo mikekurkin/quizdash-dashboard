@@ -5,6 +5,7 @@ import React from 'react'
 import { InfiniteDataTable } from '~/components/ui/infinite-data-table'
 import { useGames } from '~/hooks/useGames'
 import { cn } from '~/lib/utils'
+import { formatDateTime } from '~/lib/format'
 import { City } from '~/schemas/city'
 import type { Game, GamesResponse } from '~/schemas/game'
 import { ComplexityGrade } from './ComplexityGrade'
@@ -146,17 +147,7 @@ const createColumns = (columnHeaders: Record<string, string>): ColumnDef<Game>[]
       const date = getValue() as Date
       return (
         <LinkCell row={row} tabIndex={-1}>
-          {/* TODO: format in city's timezone */}
-          {date
-            .toLocaleString('ru-RU', {
-              year: '2-digit',
-              month: 'numeric',
-              day: 'numeric',
-              weekday: 'short',
-              hour: 'numeric',
-              minute: 'numeric',
-            })
-            .toLowerCase()}
+          {formatDateTime(date, row.original.city.timezone)}
         </LinkCell>
       )
     },

@@ -16,11 +16,11 @@ const waitWithBackoff = async (retryCount: number): Promise<void> => {
 
 // Define the response type
 type LoaderData =
-  | { cities: City[]; currentCity: City; appName: string; error?: undefined }
-  | { cities: City[]; currentCity: null; appName: string; error: string }
+  | { cities: City[]; currentCity: City; appName: string; menu: { games: string; teams: string; compare: string }; error?: undefined }
+  | { cities: City[]; currentCity: null; appName: string; menu: { games: string; teams: string; compare: string }; error: string }
 
 export const loader = async ({ params }: LoaderFunctionArgs): Promise<LoaderData | Response> => {
-  const t = await i18next.getFixedT(params.locale ?? 'ru', ['common'])
+  const t = await i18next.getFixedT(params.locale ?? 'ru', ['common', 'menu'])
 
   // Initialize with retries to handle startup timing issues
   let cities: City[] = []
@@ -54,6 +54,11 @@ export const loader = async ({ params }: LoaderFunctionArgs): Promise<LoaderData
       cities: [],
       currentCity: null,
       appName: t('appName'),
+      menu: {
+        games: t('menu:games'),
+        teams: t('menu:teams'),
+        compare: t('menu:compare'),
+      },
       error: 'Data is still being loaded. Please refresh in a few moments.',
     })
   }
@@ -74,6 +79,11 @@ export const loader = async ({ params }: LoaderFunctionArgs): Promise<LoaderData
     cities,
     currentCity,
     appName: t('appName'),
+    menu: {
+      games: t('menu:games'),
+      teams: t('menu:teams'),
+      compare: t('menu:compare'),
+    },
   }
 }
 
@@ -104,11 +114,16 @@ export default function CityLayout() {
   }
 
   // At this point we know currentCity is not null
-  const { appName, cities, currentCity } = data as { cities: City[]; currentCity: City; appName: string }
+  const { appName, cities, currentCity, menu } = data as {
+    cities: City[]
+    currentCity: City
+    appName: string
+    menu: { games: string; teams: string; compare: string }
+  }
 
   return (
     <>
-      <Header title={appName} cities={cities} currentCity={currentCity} />
+      <Header title={appName} cities={cities} currentCity={currentCity} menu={menu} />
       <div className="container mx-auto max-w-5xl px-0 md:px-6">
         <Outlet context={{ cities, currentCity }} />
       </div>

@@ -15,5 +15,6 @@
   "search": {
     "label": "Поиск",
     "placeholder": "Поиск по играм"
-  }
+  },
+  "noResults": "Игры не найдены"
 }

@@ -18,10 +18,9 @@ import { BaseSeries, BaseSeriesSchema, Series } from '~/schemas/series'
 import { Team, TeamSchema, TeamsResponse, TeamsResponseSchema } from '~/schemas/team'
 import { dataSyncService } from '~/services/dataSync.server'
 import { MetricsCalculator } from '~/services/metrics.server'
-import { QueryParams } from '~/types/data'
 import { CsvCache } from './csvCache.server'
 import { DerivedDataJoiner } from './derivedDataJoiner.server'
-import { FindTeamResultsParams, GetGamesParams, Storage } from './interface.server'
+import { FindTeamResultsParams, GetGamesParams, GetTeamsParams, Storage } from './interface.server'
 
 // Get data directory from environment configuration
 const config = getDataSourceConfig()
@@ -695,16 +694,92 @@ export class CsvStorage implements Storage {
     return series !== null ? joiner.joinToSeries(series) : null
   }
 
-  async getTeams(params?: QueryParams & { cityId?: number }): Promise<TeamsResponse> {
+  async getTeams(params?: GetTeamsParams): Promise<TeamsResponse> {
     const allTeams = await this.getRawTeams()
+    const joiner = await this.getJoiner()
+    const seriesId =
+      params?.seriesId ??
+      (params?.seriesSlug ? (await this.getSeriesBySlug(params.seriesSlug))?._id : undefined)
+    const city = params?.cityId
+      ? await this.getCityById(params.cityId)
+      : params?.citySlug
+        ? await this.getCityBySlug(params.citySlug)
+        : null
 
     const filteredTeams = allTeams.filter((team) => {
-      if (params?.cityId && team.city?._id !== params.cityId) return false
+      if (city && team.city?._id !== city._id) return false
       if (params?.search) return team.name.toLowerCase().includes(params.search.toLowerCase())
       return true
     })
 
-    const sortedTeams = filteredTeams.sort((a, b) => a.name.localeCompare(b.name))
+    const joinedTeams = joiner.joinToTeams(filteredTeams)
+    const seriesFilteredTeams = seriesId
+      ? joinedTeams.filter((team) => (team.metrics?.series?.[seriesId]?.gamesCount ?? 0) > 0)
+      : joinedTeams
+
+    const sort = params?.sort ?? 'name'
+    const order = params?.order ?? 'asc'
+    const direction = order === 'desc' ? -1 : 1
+    const normalizedSearch = params?.search?.toLowerCase().trim()
+
+    const getMetrics = (team: Team) =>
+      seriesId ? team.metrics?.series?.[seriesId] : team.metrics
+
+    const minGames = params?.minGames ?? 0
+    const minGamesFilteredTeams =
+      sort === 'avg_sum' && minGames > 0
+        ? seriesFilteredTeams.filter((team) => (getMetrics(team)?.gamesCount ?? 0) >= minGames)
+        : seriesFilteredTeams
+
+    const sortedTeams = minGamesFilteredTeams.sort((a, b) => {
+      if (normalizedSearch) {
+        const aName = a.name.toLowerCase()
+        const bName = b.name.toLowerCase()
+        const aStarts = aName.startsWith(normalizedSearch)
+        const bStarts = bName.startsWith(normalizedSearch)
+        if (aStarts !== bStarts) {
+          return aStarts ? -1 : 1
+        }
+      }
+
+      switch (sort) {
+        case 'city': {
+          const aCity = a.city?.name ?? ''
+          const bCity = b.city?.name ?? ''
+          return direction * aCity.localeCompare(bCity)
+        }
+        case 'games': {
+          const aGames = getMetrics(a)?.gamesCount ?? 0
+          const bGames = getMetrics(b)?.gamesCount ?? 0
+          return direction * (aGames - bGames)
+        }
+        case 'avg_sum': {
+          const aAvg = getMetrics(a)?.avgSum ?? 0
+          const bAvg = getMetrics(b)?.avgSum ?? 0
+          return direction * (aAvg - bAvg)
+        }
+        case 'sum_total': {
+          const aSum = getMetrics(a)?.sumTotal ?? 0
+          const bSum = getMetrics(b)?.sumTotal ?? 0
+          return direction * (aSum - bSum)
+        }
+        case 'avg_place': {
+          const aAvg = getMetrics(a)?.avgPlace ?? 0
+          const bAvg = getMetrics(b)?.avgPlace ?? 0
+          return direction * (aAvg - bAvg)
+        }
+        case 'best_sum': {
+          const aBest = getMetrics(a)?.bestSum ?? 0
+          const bBest = getMetrics(b)?.bestSum ?? 0
+          return direction * (aBest - bBest)
+        }
+        case 'id':
+          return direction * a._id.localeCompare(b._id)
+        case 'name':
+        default:
+          return direction * a.name.localeCompare(b.name)
+      }
+    })
 
     const offset = params?.cursor ?? 0
     const limit = params?.limit ?? 20
@@ -712,16 +787,20 @@ export class CsvStorage implements Storage {
 
     return TeamsResponseSchema.strip().parse({
       data: paginatedTeams,
-      total: filteredTeams.length,
-      hasMore: offset + limit < filteredTeams.length,
-      nextCursor: offset + limit < filteredTeams.length ? (offset + limit).toString() : undefined,
+      total: minGamesFilteredTeams.length,
+      hasMore: offset + limit < minGamesFilteredTeams.length,
+      nextCursor: offset + limit < minGamesFilteredTeams.length ? (offset + limit).toString() : undefined,
     })
   }
 
   async getTeamBySlug(slug: string, cityId: number): Promise<Team | null> {
     const teams = await this.getRawTeams()
-    return teams.find((team) => team.slug === slug && team.city?._id === cityId) || null
+    const team = teams.find((team) => team.slug === slug && team.city?._id === cityId) || null
+    if (!team) return null
+    const joiner = await this.getJoiner()
+    return joiner.joinToTeams(team)
   }
+
 
   async getTeamResults(teamId: string): Promise<GameResult[]> {
     const allResults = await this.getRawGameResults()
