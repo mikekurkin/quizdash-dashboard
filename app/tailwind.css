@@ -29,6 +29,11 @@
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
+    --team-1: theme('colors.blue.500');
+    --team-2: theme('colors.green.500');
+    --team-3: theme('colors.purple.500');
+    --team-4: theme('colors.orange.500');
+    --team-5: theme('colors.pink.500');
   }
   .dark,
   :root[class~='dark'] {
@@ -56,6 +61,11 @@
     --chart-3: 30 80% 55%;
     --chart-4: 280 65% 60%;
     --chart-5: 340 75% 55%;
+    --team-1: theme('colors.blue.400');
+    --team-2: theme('colors.green.400');
+    --team-3: theme('colors.purple.400');
+    --team-4: theme('colors.orange.400');
+    --team-5: theme('colors.pink.400');
   }
   * {
     @apply border-border;

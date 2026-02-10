@@ -110,9 +110,13 @@ export function InfiniteDataTable<TData, TValue>({
               <TableHead
                 key={header.id}
                 className={extraClassNames?.head}
-                style={{
-                  width: header.getSize(),
-                }}
+                style={
+                  header.column.columnDef.meta?.disableWidth
+                    ? undefined
+                    : {
+                        width: header.getSize(),
+                      }
+                }
               >
                 {header.isPlaceholder ? null : flexRender(header.column.columnDef.header, header.getContext())}
               </TableHead>
@@ -131,7 +135,11 @@ export function InfiniteDataTable<TData, TValue>({
                   <TableCell
                     className={cn(extraClassNames?.cell)}
                     key={cell.id}
-                    style={{ width: cell.column.getSize() }}
+                    style={
+                      cell.column.columnDef.meta?.disableWidth
+                        ? undefined
+                        : { width: cell.column.getSize() }
+                    }
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>

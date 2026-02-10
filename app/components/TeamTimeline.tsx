@@ -1,4 +1,4 @@
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@radix-ui/react-tooltip'
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from './ui/mobile-tooltip'
 import { format } from 'date-fns'
 import { ru } from 'date-fns/locale'
 import { InfoIcon } from 'lucide-react'

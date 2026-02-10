@@ -9,6 +9,8 @@ export const BaseSeriesSchema = z.object({
 export const SeriesMetricsSchema = z.object({
   maxSum: z.number().default(0),
   maxSumId: z.string().nullish(),
+  gamesCount: z.number().default(0),
+  gamesCountByCity: z.record(z.string(), z.number()).default({}),
   roundsCount: z.number().default(0),
   maxRoundSums: z.array(z.number()).default([]),
   maxRoundSumIds: z.array(z.string()).default([]),
